@@ -3,6 +3,7 @@ import yaml
 
 def generar_docker_compose(archivo_salida, cant_clientes):
     docker_compose_data = {
+        "name": "tp0",
         "services": {
             "server": {
                 "container_name": "server",
