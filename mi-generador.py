@@ -11,7 +11,7 @@ def generar_docker_compose(archivo_salida, cant_clientes):
                 "entrypoint": "python3 /main.py",
                 "environment": [
                     "PYTHONUNBUFFERED=1",
-                    "LOGGING_LEVEL=INFO",
+                    "LOGGING_LEVEL=DEBUG",
                 ],
                 "networks": ["testing_net"],
                 "volumes": [
@@ -38,7 +38,7 @@ def generar_docker_compose(archivo_salida, cant_clientes):
             "entrypoint": "/client",
             "environment": [
                 f"CLI_ID={i}",
-                "CLI_LOG_LEVEL=INFO"
+                "CLI_LOG_LEVEL=DEBUG"
             ],
             "networks": ["testing_net"],
             "depends_on": ["server"],
