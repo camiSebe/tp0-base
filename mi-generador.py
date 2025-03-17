@@ -28,7 +28,7 @@ def generar_docker_compose(archivo_salida, cant_clientes):
         }
     }
 
-    for i in range(cant_clientes):
+    for i in range(1, cant_clientes+1):
         docker_compose_data["services"][f"client{i}"] = {
             "container_name": f"client{i}",
             "image": "client:latest",
