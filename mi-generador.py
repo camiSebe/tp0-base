@@ -14,6 +14,9 @@ def generar_docker_compose(archivo_salida, cant_clientes):
                     "LOGGING_LEVEL=DEBUG",
                 ],
                 "networks": ["testing_net"],
+                "volumes": [
+                    "./server/config.ini:/config.ini"
+                ]
             }
         },
         "networks": {
@@ -38,7 +41,10 @@ def generar_docker_compose(archivo_salida, cant_clientes):
                 "CLI_LOG_LEVEL=DEBUG"
             ],
             "networks": ["testing_net"],
-            "depends_on": ["server"]
+            "depends_on": ["server"],
+            "volumes": [
+                "./client/config.yaml:/config.yaml"
+            ]
         }
     
     with open(archivo_salida, "w") as file:
