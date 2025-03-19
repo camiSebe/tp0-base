@@ -9,7 +9,7 @@ DUMMY_MESSAGE="ping"
 
 RESPUESTA=$(docker run --rm --network $NETWORK busybox sh -c "echo '$DUMMY_MESSAGE' | nc -w $TTL $SERVER_CONTAINER_NAME $SERVER_PORT")
 
-if [[ "$RESPUESTA" == "$DUMMY_MESSAGE" ]]; then
+if [ "$RESPUESTA" = "$DUMMY_MESSAGE" ]; then
     echo "action: test_echo_server | result: success"
 else
     echo "action: test_echo_server | result: fail"
