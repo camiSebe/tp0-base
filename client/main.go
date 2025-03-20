@@ -121,6 +121,7 @@ func main() {
 		<-sigChan
 		log.Infof("action: Signal | result: success")
 		client.StopClient()
+		os.Exit(1)
 	}()
 
 	client.StartClientLoop()
