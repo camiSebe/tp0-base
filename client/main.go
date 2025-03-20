@@ -3,6 +3,8 @@ package main
 import (
 	"fmt"
 	"os"
+	"os/signal"
+	"syscall"
 	"strings"
 	"time"
 
@@ -111,6 +113,16 @@ func main() {
 	}
 
 	client := common.NewClient(clientConfig)
+
+	sigChan := make(chan os.Signal, 1)
+	signal.Notify(sigChan, os.Interrupt, syscall.SIGTERM)
+
+	go func() {
+		<-sigChan
+		log.Infof("action: Signal | result: success")
+		client.StopClient()
+	}()
+
 	client.StartClientLoop()
 	client.StopClient()
 }
