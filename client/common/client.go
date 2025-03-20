@@ -87,3 +87,8 @@ func (c *Client) StartClientLoop() {
 	}
 	log.Infof("action: loop_finished | result: success | client_id: %v", c.config.ID)
 }
+
+func (c *Client) StopClient() {
+	c.conn.Close()
+	log.Infof("action: stop_client | result: success | client_id: %v", c.config.ID)
+}
