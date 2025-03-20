@@ -3,14 +3,13 @@ import logging
 
 import signal
 
-SUCCESS = 0
-
 class Server:
     def __init__(self, port, listen_backlog):
         # Initialize server socket
         self._server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self._server_socket.bind(('', port))
         self._server_socket.listen(listen_backlog)
+        self._was_closed = False
         signal.signal(signal.SIGTERM, self.stop_server)
 
     def run(self):
@@ -21,12 +20,12 @@ class Server:
         communication with a client. After client with communucation
         finishes, servers starts to accept new connections again
         """
-
-        # TODO: Modify this program to handle signal to graceful shutdown
-        # the server
-        while True:
-            client_sock = self.__accept_new_connection()
-            self.__handle_client_connection(client_sock)
+        while not self._was_closed:
+            try:
+                client_sock = self.__accept_new_connection()
+                self.__handle_client_connection(client_sock)
+            except OSError as e:
+                break
 
     def __accept_new_connection(self):
         """
@@ -54,11 +53,13 @@ class Server:
             msg = client_sock.recv(1024).rstrip().decode('utf-8')
             addr = client_sock.getpeername()
             logging.info(f'action: receive_message | result: success | ip: {addr[0]} | msg: {msg}')
+
             # TODO: Modify the send to avoid short-writes
             client_sock.send("{}\n".format(msg).encode('utf-8'))
         except OSError as e:
             logging.error("action: receive_message | result: fail | error: {e}")
         finally:
+            logging.info(f'action: close_connection | result: success | ip: {addr[0]}')
             client_sock.close()
 
 
@@ -70,4 +71,4 @@ class Server:
         """
         logging.info('action: stop_server | result: success')
         self._server_socket.close()
-        exit(SUCCESS)
+        self._was_closed = True
