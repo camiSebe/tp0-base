@@ -1,6 +1,9 @@
 import socket
 import logging
 
+import signal
+
+SUCCESS = 0
 
 class Server:
     def __init__(self, port, listen_backlog):
@@ -8,6 +11,7 @@ class Server:
         self._server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self._server_socket.bind(('', port))
         self._server_socket.listen(listen_backlog)
+        signal.signal(signal.SIGTERM, self.stop_server)
 
     def run(self):
         """
@@ -23,6 +27,20 @@ class Server:
         while True:
             client_sock = self.__accept_new_connection()
             self.__handle_client_connection(client_sock)
+
+    def __accept_new_connection(self):
+        """
+        Accept new connections
+
+        Function blocks until a connection to a client is made.
+        Then connection created is printed and returned
+        """
+
+        # Connection arrived
+        logging.info('action: accept_connections | result: in_progress')
+        c, addr = self._server_socket.accept()
+        logging.info(f'action: accept_connections | result: success | ip: {addr[0]}')
+        return c
 
     def __handle_client_connection(self, client_sock):
         """
@@ -43,16 +61,13 @@ class Server:
         finally:
             client_sock.close()
 
-    def __accept_new_connection(self):
-        """
-        Accept new connections
 
-        Function blocks until a connection to a client is made.
-        Then connection created is printed and returned
+    def stop_server(self, signum, frame):
         """
+        Stop server
 
-        # Connection arrived
-        logging.info('action: accept_connections | result: in_progress')
-        c, addr = self._server_socket.accept()
-        logging.info(f'action: accept_connections | result: success | ip: {addr[0]}')
-        return c
+        Function that stops the server and closes the server socket
+        """
+        logging.info('action: stop_server | result: success')
+        self._server_socket.close()
+        exit(SUCCESS)
