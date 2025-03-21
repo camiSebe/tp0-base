@@ -106,8 +106,15 @@ func (c *Client) StartClientLoop() {
 }
 
 func (c *Client) StopClient() {
-	if c.conn != nil {
-		c.conn.Close()
-		log.Infof("action: stop_client | result: success | client_id: %v", c.config.ID)
+	select {
+	case <-c.done:
+		// Already closed, nothing to do
+		return
+	default:
+		close(c.done)
+		if c.conn != nil {
+			c.conn.Close()
+			log.Infof("action: stop_client | result: success | client_id: %v", c.config.ID)
+		}
 	}
 }
