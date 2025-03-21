@@ -3,6 +3,8 @@ import logging
 
 import signal
 
+from common.protocol_server_client import ProtocolServer
+
 class Server:
     def __init__(self, port, listen_backlog):
         # Initialize server socket
@@ -34,7 +36,6 @@ class Server:
         Function blocks until a connection to a client is made.
         Then connection created is printed and returned
         """
-
         # Connection arrived
         logging.info('action: accept_connections | result: in_progress')
         c, addr = self._server_socket.accept()
@@ -49,13 +50,10 @@ class Server:
         client socket will also be closed
         """
         try:
-            # TODO: Modify the receive to avoid short-reads
-            msg = client_sock.recv(1024).rstrip().decode('utf-8')
+            msg = ProtocolServer(client_sock).receive_message()
             addr = client_sock.getpeername()
             logging.info(f'action: receive_message | result: success | ip: {addr[0]} | msg: {msg}')
-
-            # TODO: Modify the send to avoid short-writes
-            client_sock.send("{}\n".format(msg).encode('utf-8'))
+            ProtocolServer(client_sock).send_message(msg)
         except OSError as e:
             logging.error("action: receive_message | result: fail | error: {e}")
         finally:
