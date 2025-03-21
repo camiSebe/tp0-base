@@ -37,9 +37,9 @@ class Server:
         Then connection created is printed and returned
         """
         # Connection arrived
-        logging.info('action: accept_connections | result: in_progress')
+        self._log_info('accept_connections', 'in_progress')
         c, addr = self._server_socket.accept()
-        logging.info(f'action: accept_connections | result: success | ip: {addr[0]}')
+        self._log_info('accept_connections', 'success', addr[0])
         return c
 
     def __handle_client_connection(self, client_sock):
@@ -52,12 +52,13 @@ class Server:
         try:
             msg = ProtocolServer(client_sock).receive_message()
             addr = client_sock.getpeername()
-            logging.info(f'action: receive_message | result: success | ip: {addr[0]} | msg: {msg}')
+            self._log_info('receive_message', 'success', addr[0], msg=msg)
             ProtocolServer(client_sock).send_message(msg)
         except OSError as e:
-            logging.error("action: receive_message | result: fail | error: {e}")
+            self._log_error('receive_message', 'fail', error=e)
         finally:
-            logging.info(f'action: close_connection | result: success | ip: {addr[0]}')
+            addr = client_sock.getpeername()
+            self._log_info('close_connection', 'success', addr[0])
             client_sock.close()
 
 
@@ -67,6 +68,27 @@ class Server:
 
         Function that stops the server and closes the server socket
         """
-        logging.info('action: stop_server | result: success')
+        self._log_info('stop_server', 'success')
         self._server_socket.close()
         self._was_closed = True
+
+    ### Logging helper functions
+    def _log_info(self, action, result, ip=None, msg=None):
+        """
+        Helper function for logging informational messages
+        """
+        log_message = f"action: {action} | result: {result}"
+        if ip:
+            log_message += f" | ip: {ip}"
+        if msg:
+            log_message += f" | msg: {msg}"
+        logging.info(log_message)
+
+    def _log_error(self, action, result, error=None):
+        """
+        Helper function for logging error messages
+        """
+        log_message = f"action: {action} | result: {result}"
+        if error:
+            log_message += f" | error: {error}"
+        logging.error(log_message)
