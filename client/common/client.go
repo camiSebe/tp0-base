@@ -15,6 +15,15 @@ type ClientConfig struct {
 	ServerAddress string
 	LoopAmount    int
 	LoopPeriod    time.Duration
+	BetData       BetData
+}
+
+type BetData struct {
+	Nombre        string
+	Apellido      string
+	DNI           string
+	Nacimiento    string
+	Numero        string
 }
 
 // Client Entity that encapsulates how
@@ -57,7 +66,7 @@ func (c *Client) StartClientLoop() {
 		// Create the connection the server in every loop iteration. Send an
 		c.createClientSocket()
 
-		if err := c.SendMessage(msgID); err != nil {
+		if err := c.SendMessage(msgID, c.config.BetData); err != nil {
 			c.conn.Close()
 			return
 		}

@@ -110,6 +110,6 @@ Paquetes:
   * Luego se manda un segundo mensaje con efectivamente todos los datos serializados como bytes
 
 * Servidor a Cliente:
-  * "Mensaje Respuesta": `<size_del_mensaje_recibido> <bit_resultado>\n`
-  * Exito: `<size_del_mensaje_recibido> 0\n` -> Se pudo guardar la apuesta correctamente
-  * Falla: `<size_del_mensaje_recibido> 1\n` -> No se pudo guardar la apuesta. (Capaz podria devolver distintos codigos de error en caso de distintas fallas)
+  * "Mensaje Respuesta": `<size_del_mensaje_recibido> <dni_apostador> <numero_apostado> <bit_resultado>\n`
+  * Exito: `<size_del_mensaje_recibido> <dni_apostador> <numero_apostado> 0\n` -> Se pudo guardar la apuesta correctamente
+  * Falla: `<size_del_mensaje_recibido> <dni_apostador> <numero_apostado> 1\n` -> No se pudo guardar la apuesta. (Capaz podria devolver distintos codigos de error en caso de distintas fallas)

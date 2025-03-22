@@ -8,28 +8,23 @@ import (
 )
 
 // SendMessage serializes and sends a message to the server
-func (c *Client) SendMessage(msgID int) error {
-	message := fmt.Sprintf("[CLIENT %v] Message N°%v", c.config.ID, msgID)
+func (c *Client) SendMessage(msgID int, betData BetData) error {
+	log.Infof("action: sending_message | result: in progress | client_id: %v | msg_id: %v", c.config.ID, msgID)
+	message := fmt.Sprintf("%v %v %v %v %v", betData.Nombre, betData.Apellido, betData.DNI, betData.Nacimiento, betData.Numero)
 	serializedMsg, err := SerializeMessage(message)
-	if err != nil {
-		log.Criticalf("action: serialize_message | result: fail | client_id: %v | error: %v", c.config.ID, err)
-		return err
-	} else {
-		log.Infof("action: serialize_message | result: success | client_id: %v | msg: %v", c.config.ID, message)
-	}
-
 	_, err = c.conn.Write(serializedMsg)
 	if err != nil {
-		log.Criticalf("action: send_message | result: fail | client_id: %v | error: %v", c.config.ID, err)
+		log.Criticalf("action: sending_message | result: fail | client_id: %v | error: %v", c.config.ID, err)
 		return err
 	}
 
-	log.Infof("action: send_message | result: success | client_id: %v | msg_id: %v", c.config.ID, msgID)
+	log.Infof("action: sending_message | result: success | client_id: %v | msg_id: %v", c.config.ID, msgID)
 	return nil
 }
 
 // ReceiveMessage reads and deserializes a message from the server
 func (c *Client) ReceiveMessage() (string, error) {
+	log.Infof("action: receive_message_size | result: in progress | client_id: %v", c.config.ID)
 	reader := bufio.NewReader(c.conn)
 	sizeBuf := make([]byte, SIZE_UINT32)
 	_, err := reader.Read(sizeBuf)
