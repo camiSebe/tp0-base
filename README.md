@@ -105,9 +105,9 @@ Se deberá implementar un módulo de comunicación entre el cliente y el servido
 Paquetes:
 
 * Cliente a Servidor: Se van a mandar 2 mensajes por cada apuesta.
-  * "Mensaje apuesta": `<nombre_apostador>,<apellido_apostador>,<dni_apostador>,<nacimiento_apostador>,<numero_apostado>\n`
-  * Primero se va a mandar un mensaje cuyo header sea el size del contenido total del "mensaje apuesta":  `<size_mensaje_apuesta>\n`
-  * Luego se manda un segundo mensaje con efectivamente todos los datos serializados como strings
+  * "Mensaje apuesta": `<nombre_apostador> <apellido_apostador> <dni_apostador> <nacimiento_apostador> <numero_apostado>\n`
+  * Primero se va a mandar un mensaje cuyo contenido es el length del contenido total del "mensaje apuesta" encodeado como un uint32 (4 Bytes) bigEndian:  `<len_mensaje_apuesta>\n`
+  * Luego se manda un segundo mensaje con efectivamente todos los datos serializados como bytes
 
 * Servidor a Cliente:
   * "Mensaje Respuesta": `<size_del_mensaje_recibido> <bit_resultado>\n`
