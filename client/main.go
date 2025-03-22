@@ -115,15 +115,13 @@ func main() {
 	client := common.NewClient(clientConfig)
 
 	sigChan := make(chan os.Signal, 1)
-	signal.Notify(sigChan, os.Interrupt, syscall.SIGTERM)
+	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
 
 	go func() {
 		<-sigChan
 		log.Infof("action: Signal | result: success")
 		client.StopClient()
-		os.Exit(1)
 	}()
 
 	client.StartClientLoop()
-	client.StopClient()
 }
