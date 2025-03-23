@@ -118,18 +118,20 @@ func main() {
 		ID:            v.GetString("id"),
 		LoopAmount:    v.GetInt("loop.amount"),
 		LoopPeriod:    v.GetDuration("loop.period"),
-		BetData: common.BetData{
-			Nombre:     v.GetString("bet.nombre"),
-			Apellido:   v.GetString("bet.apellido"),
-			DNI:        v.GetString("bet.documento"),
-			Nacimiento: v.GetString("bet.nacimiento"),
-			Numero:     v.GetString("bet.numero"),
-		},
 	}
 
-	log.Infof("Apuesta cargada: Nombre: %s, Apellido: %s, DNI: %s, Nacimiento: %s, Número: %s", clientConfig.BetData.Nombre, clientConfig.BetData.Apellido, clientConfig.BetData.DNI, clientConfig.BetData.Nacimiento, clientConfig.BetData.Numero)
+	betConfig := common.BetConfig{
+		Nombre:     v.GetString("bet.nombre"),
+		Apellido:   v.GetString("bet.apellido"),
+		DNI:        v.GetString("bet.documento"),
+		Nacimiento: v.GetString("bet.nacimiento"),
+		Numero:     v.GetString("bet.numero"),
+	}
 
-	client := common.NewClient(clientConfig)
+	log.Infof("action: config_bet | result: success | Nombre: %s | Apellido: %s | DNI: %s | Nacimiento: %s | Número: %s",
+		betConfig.Nombre, betConfig.Apellido, betConfig.DNI, betConfig.Nacimiento, betConfig.Numero)
+
+	client := common.NewClient(clientConfig, betConfig)
 
 	sigChan := make(chan os.Signal, 1)
 	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)

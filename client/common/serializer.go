@@ -2,24 +2,24 @@ package common
 
 import (
 	"encoding/binary"
-	"bytes"
 	"fmt"
 )
 
-// SerializeMessage serializes the message by prefixing it with its size
-func SerializeMessage(msg string) ([]byte, error) {
-	msgBytes := []byte(msg)
-	msgSize := uint32(len(msgBytes))
-	log.Infof("action: serialize_message | result: success | size: %v | msg: %v", msgSize, msg)
+type SerializedBet struct {
+	data [][]byte
+}
 
-	buf := new(bytes.Buffer)
-	if err := binary.Write(buf, binary.BigEndian, msgSize); err != nil {
-		log.Criticalf("action: serialize_message | result: fail | error: %v", err)
-		return nil, err
+// SerializeBet serializes a bet into a SerializedBet struct
+func SerializeBet(betData BetConfig) SerializedBet {
+	return SerializedBet{
+		data: [][]byte{
+			[]byte(betData.Nombre),
+			[]byte(betData.Apellido),
+			[]byte(betData.DNI),
+			[]byte(betData.Nacimiento),
+			[]byte(betData.Numero),
+		},
 	}
-	buf.Write(msgBytes)
-
-	return buf.Bytes(), nil
 }
 
 // DeserializeMessage extracts the message size and content from a byte slice

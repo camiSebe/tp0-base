@@ -15,28 +15,21 @@ type ClientConfig struct {
 	ServerAddress string
 	LoopAmount    int
 	LoopPeriod    time.Duration
-	BetData       BetData
-}
-
-type BetData struct {
-	Nombre        string
-	Apellido      string
-	DNI           string
-	Nacimiento    string
-	Numero        string
 }
 
 // Client Entity that encapsulates how
 type Client struct {
 	config ClientConfig
+	bet    BetConfig
 	conn   net.Conn
 }
 
 // NewClient Initializes a new client receiving the configuration
 // as a parameter
-func NewClient(config ClientConfig) *Client {
+func NewClient(config ClientConfig, bet BetConfig) *Client {
 	client := &Client{
 		config: config,
+		bet: bet,
 	}
 	return client
 }
@@ -58,6 +51,21 @@ func (c *Client) createClientSocket() error {
 	return nil
 }
 
+
+// makeBet Sends a bet to the server and receives confirmation
+func (c *Client) makeBet(msgID int) {
+	if err := c.SendBet(msgID, c.bet); err != nil {
+		c.conn.Close()
+		return
+	}
+
+	if _, err := c.ReceiveConfirmation(); err != nil {
+		c.conn.Close()
+		return
+	}
+}
+
+
 // StartClientLoop Send messages to the client until some time threshold is met
 func (c *Client) StartClientLoop() {
 	// There is an autoincremental msgID to identify every message sent
@@ -66,15 +74,7 @@ func (c *Client) StartClientLoop() {
 		// Create the connection the server in every loop iteration. Send an
 		c.createClientSocket()
 
-		if err := c.SendMessage(msgID, c.config.BetData); err != nil {
-			c.conn.Close()
-			return
-		}
-
-		if _, err := c.ReceiveMessage(); err != nil {
-			c.conn.Close()
-			return
-		}
+		c.makeBet(msgID)
 
 		c.conn.Close()
 
