@@ -50,10 +50,10 @@ class Server:
         client socket will also be closed
         """
         try:
-            msg = ProtocolServer(client_sock).receive_message()
+            bet = ProtocolServer(client_sock).receive_bet()
             addr = client_sock.getpeername()
-            self._log_info('receive_message', 'success', addr[0], msg=msg)
-            ProtocolServer(client_sock).send_message(msg)
+            self._log_info('receive_message', 'success', addr[0], msg=bet)
+            ProtocolServer(client_sock).send_message(bet)
         except OSError as e:
             self._log_error('receive_message', 'fail', error=e)
         finally:
