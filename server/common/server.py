@@ -115,7 +115,7 @@ class Server:
                 logging.debug(f"action: receive_batch_size | result: success | cantidad: {len(bets)}")
                 ProtocolServer(client_sock).send_confirmation(BATCH_SUCCESS)
 
-        logging.info(f"action: apuesta_recibida | result: success | cantidad: {len(self._bets_controller.bets_received)}")
+        logging.info(f"action: apuesta_recibida | result: success | cantidad: {self._bets_controller.bets_received}")
 
     def process_bet(self, client_sock) -> Bet:
         bet = ProtocolServer(client_sock).receive_bet()
