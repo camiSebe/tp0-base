@@ -148,7 +148,7 @@ Se recibe solamente 1 byte con la confirmación del servidor. En caso de recibir
 ###### Recepción de mensajes de los Clientes
 
 Se recibe siempre primero el largo del campo, y luego la información del campo. El orden esperado es el descripto en la parte de envío del servidor (Nombre - Apellido - DNI - Nacimiento - Numero - Agencia)
-Obs: Se tomó la decisión de que si no se informa la agencia, esta tendrá el campo con 0
+Obs: Se tomó la decisión de que si no se informa la agencia o el número apostado, se pondrá el campo con 0. En caso de no informar la fecha de nacimiento, el campo dira None
 
 ###### Envío de mensajes a los Clientes
 

@@ -17,12 +17,12 @@ class Bet:
         birthdate must be passed with format: 'YYYY-MM-DD'.
         number must be passed with integer format.
         """
-        self.agency = int(agency)
+        self.agency = int(agency) if agency != "" else 0
         self.first_name = first_name
         self.last_name = last_name
         self.document = document
-        self.birthdate = datetime.date.fromisoformat(birthdate)
-        self.number = int(number)
+        self.birthdate = datetime.date.fromisoformat(birthdate) if birthdate != "" else None
+        self.number = int(number) if number != "" else 0
 
     def log_message(self):
         return f"First name: {self.first_name} | Last name: {self.last_name} | Document: {self.document} | Birthdate: {self.birthdate} | Number: {self.number} | Agency: {self.agency}"

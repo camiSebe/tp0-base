@@ -37,9 +37,6 @@ class ProtocolServer:
 
         agency = receive_string(self._client_socket)
         logging.info(f"action: receive_message | result: success | message: {agency}")
-        # If the agency is empty, it is set to 0
-        if agency == "":
-            agency = 0
         
         bet = Bet(agency, first_name, last_name, document, birthdate, number)
         return bet
