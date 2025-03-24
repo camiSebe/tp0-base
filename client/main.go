@@ -25,14 +25,6 @@ var log = logging.MustGetLogger("log")
 func InitConfig() (*viper.Viper, error) {
 	v := viper.New()
 
-	// Add env variables for bet
-	v.BindEnv("nombre")
-	v.BindEnv("apellido")
-	v.BindEnv("documento")
-	v.BindEnv("nacimiento")
-	v.BindEnv("numero")
-	v.BindEnv("agencia")
-
 	// Configure viper to read env variables with the CLI_ prefix
 	v.AutomaticEnv()
 	v.SetEnvPrefix("cli")
@@ -47,6 +39,7 @@ func InitConfig() (*viper.Viper, error) {
 	v.BindEnv("loop", "period")
 	v.BindEnv("loop", "amount")
 	v.BindEnv("log", "level")
+	v.BindEnv("batch", "maxAmount")
 
 	// Try to read configuration from config file. If config file
 	// does not exists then ReadInConfig will fail but configuration
@@ -117,21 +110,10 @@ func main() {
 		ID:            v.GetString("id"),
 		LoopAmount:    v.GetInt("loop.amount"),
 		LoopPeriod:    v.GetDuration("loop.period"),
+		BatchMaxAmount: v.GetInt("batch.maxAmount"),
 	}
 
-	betConfig := common.BetConfig{
-		Nombre:     v.GetString("nombre"),
-		Apellido:   v.GetString("apellido"),
-		DNI:        v.GetString("documento"),
-		Nacimiento: v.GetString("nacimiento"),
-		Numero:     v.GetString("numero"),
-		Agencia:    v.GetString("agencia"),
-	}
-
-	log.Infof("action: config_bet | result: success | Nombre: %s | Apellido: %s | DNI: %s | Nacimiento: %s | Número: %s | Agencia: %s",
-		betConfig.Nombre, betConfig.Apellido, betConfig.DNI, betConfig.Nacimiento, betConfig.Numero, betConfig.Agencia)
-
-	client := common.NewClient(clientConfig, betConfig)
+	client := common.NewClient(clientConfig)
 
 	sigChan := make(chan os.Signal, 1)
 	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)

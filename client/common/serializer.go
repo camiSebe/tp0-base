@@ -5,7 +5,7 @@ type SerializedBet struct {
 }
 
 // SerializeBet serializes a bet into a SerializedBet struct that has all their fields as byte slices
-func SerializeBet(betData BetConfig) SerializedBet {
+func SerializeBet(betData Bet) SerializedBet {
 	return SerializedBet{
 		data: [][]byte{
 			[]byte(betData.Nombre),

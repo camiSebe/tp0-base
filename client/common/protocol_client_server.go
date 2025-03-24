@@ -8,7 +8,7 @@ const CONFIRMATION_MESSAGE_SIZE = 1
 const READING_ERROR = 1
 
 // SendMessage serializes and sends a message to the server
-func (c *Client) SendBet(msgID int, betData BetConfig) error {
+func (c *Client) SendBet(msgID int, betData Bet) error {
 	log.Infof("action: sending_bet | result: in_progress | client_id: %v | msg_id: %v", c.config.ID, msgID)
 
 	serializedBet := SerializeBet(betData)

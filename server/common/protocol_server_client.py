@@ -21,22 +21,22 @@ class ProtocolServer:
         - Agency
         """
         first_name = receive_string(self._client_socket)
-        logging.info(f"action: receive_message | result: success | message: {first_name}")
+        logging.debug(f"action: receive_message | result: success | message: {first_name}")
 
         last_name = receive_string(self._client_socket)
-        logging.info(f"action: receive_message | result: success | message: {last_name}")
+        logging.debug(f"action: receive_message | result: success | message: {last_name}")
 
         document = receive_string(self._client_socket)
-        logging.info(f"action: receive_message | result: success | message: {document}")
+        logging.debug(f"action: receive_message | result: success | message: {document}")
 
         birthdate = receive_string(self._client_socket)
-        logging.info(f"action: receive_message | result: success | message: {birthdate}")
+        logging.debug(f"action: receive_message | result: success | message: {birthdate}")
 
         number = receive_string(self._client_socket)
-        logging.info(f"action: receive_message | result: success | message: {number}")
+        logging.debug(f"action: receive_message | result: success | message: {number}")
 
         agency = receive_string(self._client_socket)
-        logging.info(f"action: receive_message | result: success | message: {agency}")
+        logging.debug(f"action: receive_message | result: success | message: {agency}")
         
         bet = Bet(agency, first_name, last_name, document, birthdate, number)
         return bet

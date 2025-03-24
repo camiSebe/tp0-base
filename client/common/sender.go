@@ -40,7 +40,7 @@ func SendLen(conn net.Conn, data uint8) error {
 		log.Criticalf("action: SendLen | result: fail | error: %v", err)
 		return err
 	}
-	log.Infof("action: SendLen | result: success | Len: %v", data)
+	log.Debugf("action: SendLen | result: success | Len: %v", data)
 	return nil
 }
 
@@ -55,7 +55,7 @@ func SendData(conn net.Conn, data []byte, bytesToSend uint8) error {
 		}
 		total += uint8(n)
 	}
-	log.Infof("action: SendData | result: success | Bytes sent: %v | Data: %v", total, data)
+	log.Debugf("action: SendData | result: success | Bytes sent: %v | Data: %v", total, data)
 	return nil
 }
 

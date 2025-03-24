@@ -1,5 +1,11 @@
 import sys
 import yaml
+import os
+import zipfile
+
+def extract_dataset_zip(zip_path, output_path):
+    with zipfile.ZipFile(zip_path, 'r') as zip_ref:
+        zip_ref.extractall(output_path)
 
 def generar_docker_compose(archivo_salida, cant_clientes):
     docker_compose_data = {
@@ -35,25 +41,19 @@ def generar_docker_compose(archivo_salida, cant_clientes):
             "container_name": f"client{i}",
             "image": "client:latest",
             "entrypoint": "/client",
-            "env_file": ".env",
             "environment": [
-                f"CLI_ID={i}",                
-                f"NOMBRE=${{NOMBRE}}",
-                f"APELLIDO=${{APELLIDO}}",
-                f"DOCUMENTO=${{DOCUMENTO}}",
-                f"NACIMIENTO=${{NACIMIENTO}}",
-                f"NUMERO=${{NUMERO}}",
+                f"CLI_ID={i}"
             ],
             "networks": ["testing_net"],
             "depends_on": ["server"],
             "volumes": [
-                "./client/config.yaml:/config.yaml"
+                "./client/config.yaml:/config.yaml",
+                f"./.data/dataset:/.data/dataset"
             ]
         }
     
     with open(archivo_salida, "w") as file:
         yaml.dump(docker_compose_data, file, sort_keys=False)
-
 
 
 if __name__ == "__main__":
@@ -63,5 +63,11 @@ if __name__ == "__main__":
 
     archivo_salida = sys.argv[1]
     cant_clientes = int(sys.argv[2])
+
+    if not os.path.exists(".data/dataset.zip"):
+        print("No dataset found")
+        sys.exit(1)
+    
+    extract_dataset_zip(".data/dataset.zip", ".data/dataset")
 
     generar_docker_compose(archivo_salida, cant_clientes)
