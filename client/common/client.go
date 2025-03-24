@@ -55,13 +55,22 @@ func (c *Client) createClientSocket() error {
 // makeBet Sends a bet to the server and receives confirmation
 func (c *Client) makeBet(msgID int) {
 	if err := c.SendBet(msgID, c.bet); err != nil {
+		log.Criticalf("action: send_bet | result: fail | client_id: %v | msg_id: %v | error: %v", c.config.ID, msgID, err)
 		c.conn.Close()
 		return
 	}
 
-	if _, err := c.ReceiveConfirmation(); err != nil {
+	confirmation, err := c.ReceiveConfirmation()
+	if err != nil {
+		log.Criticalf("action: receive_confirmation | result: fail | client_id: %v | msg_id: %v | error: %v", c.config.ID, msgID, err)
 		c.conn.Close()
 		return
+	}
+
+	if confirmation == BET_SUCCESS {
+		log.Infof("action: apuesta_enviada | result: success | dni: %s | numero: %s", c.bet.DNI, c.bet.Numero)
+	} else {
+		log.Criticalf("action: apuesta_enviada | result: failed_confirmation | dni: %s | numero: %s", c.bet.DNI, c.bet.Numero)
 	}
 }
 

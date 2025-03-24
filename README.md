@@ -104,7 +104,7 @@ Se deberá implementar un módulo de comunicación entre el cliente y el servido
 
 ##### Cliente a Servidor
 
-##### Envío de mensajes
+###### Envío de mensajes al Servidor
 
 Se van a mandar 2 mensajes por cada dato que se tenga que enviar, el primero sera el size del dato encodeado como un Uint8, y el siguiente el dato en si encodeado como enteros de bytes. Elegí un Uint8 porque, a priori, no parece haber ningun campo que pueda superar los 255 bytes que es el límite del Uint8.
 
@@ -139,13 +139,16 @@ Una representación "gráfica" sería:
 
 De esta forma me aseguro de que el servidor primero reciba el size del dato que tiene que leer, y luego lo reciba. De esta forma puedo chequear si efectivamente me llegaron todos los datos que envie.
 
+###### Recepción de mensajes del Servidor
+
 ##### Servidor a Cliente
 
-##### Recepción de mensajes
+Se recibe solamente 1 byte con la confirmación del servidor. En caso de recibir un `<0x00>` significará que la apuesto se guardó correctamente, y `<0x01>` significará que hubo algún fallo.
 
-***Pending
+###### Recepción de mensajes de los Clientes
 
-* Servidor a Cliente:
-  * "Mensaje Respuesta": `<size_del_mensaje_recibido> <dni_apostador> <numero_apostado> <bit_resultado>\n`
-  * Exito: `<size_del_mensaje_recibido> <dni_apostador> <numero_apostado> 0\n` -> Se pudo guardar la apuesta correctamente
-  * Falla: `<size_del_mensaje_recibido> <dni_apostador> <numero_apostado> 1\n` -> No se pudo guardar la apuesta. (Capaz podria devolver distintos codigos de error en caso de distintas fallas)
+Se recibe siempre primero el largo del campo, y luego la información del campo. El orden esperado es el descripto en la parte de envío del servidor (Nombre - Apellido - DNI - Nacimiento - Numero - Agencia)
+
+###### Envío de mensajes a los Clientes
+
+Se enviara solamente 1 byte indicando si se pudo guardar correctamente la apuesta. Es decir, el mensaje sera `<0x00>` en caso de éxito, y `<0x01>` en caso de falla.

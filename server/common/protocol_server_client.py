@@ -3,8 +3,7 @@ import logging
 
 from common.utils import Bet
 from common.receiver import receive_string
-
-SIZE_OF_UINT32 = 4
+from common.sender import send
 
 class ProtocolServer:
     def __init__(self, client_socket: socket.socket):
@@ -40,16 +39,12 @@ class ProtocolServer:
         bet = Bet(agency, first_name, last_name, document, birthdate, number)
         return bet
     
-    def send_confirmation(self, bet):
+    def send_confirmation(self, bet_result):
         """
         Send a confirmation message to the client including the document and the number of the bet following the format:
-        "<document> <number> <0x00>" if the bet was made successfully
-        "<document> <number> <0x01>" if the bet had a failure
+        <0x00> if the bet was made successfully
+        <0x01>" if the bet had a failure
         """
-        # TODO: Modify the send to avoid short-writes
-        if bet:
-            message = f"{bet.document} {bet.number} {chr(0)}"
-        else:
-            message = f"{chr(0)} {chr(0)} {chr(1)}"
-        self._client_socket.send("{}\n".format(message).encode('utf-8'))
+        send(self._client_socket, bet_result)
+        logging.info(f"action: send_confirmation_message | result: success | message: {bet_result}")
     

@@ -6,6 +6,9 @@ import signal
 from common.protocol_server_client import ProtocolServer
 from common.utils import store_bets
 
+BET_SUCCESS = 0
+BET_FAILURE = 1
+
 class Server:
     def __init__(self, port, listen_backlog):
         # Initialize server socket
@@ -55,13 +58,13 @@ class Server:
             bet = ProtocolServer(client_sock).receive_bet()
             if bet==None: 
                 self._log_error('receive_bet', 'fail', error='Bet did not arrive correctly')
-                ProtocolServer(client_sock).send_confirmation(None)
+                ProtocolServer(client_sock).send_confirmation(BET_FAILURE)
             else:
                 addr = client_sock.getpeername()
                 self._log_info('receive_bet', 'success', addr[0], msg=bet.log_message())
                 store_bets([bet])
                 self._log_info('apuesta_almacenada', 'success', None, None, bet.document, bet.number)
-                ProtocolServer(client_sock).send_confirmation(bet)
+                ProtocolServer(client_sock).send_confirmation(BET_SUCCESS)
         except OSError as e:
             self._log_error('receive_message', 'fail', error=e)
         finally:

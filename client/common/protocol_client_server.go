@@ -2,8 +2,10 @@ package common
 
 import (
 	"bufio"
-	"encoding/binary"
 )
+
+const CONFIRMATION_MESSAGE_SIZE = 1
+const READING_ERROR = 1
 
 // SendMessage serializes and sends a message to the server
 func (c *Client) SendBet(msgID int, betData BetConfig) error {
@@ -20,31 +22,21 @@ func (c *Client) SendBet(msgID int, betData BetConfig) error {
 	return nil
 }
 
-// ReceiveMessage reads and deserializes a message from the server
-func (c *Client) ReceiveConfirmation() (string, error) {
-	log.Infof("action: receive_message_size | result: in progress | client_id: %v", c.config.ID)
+// ReceiveConfirmation receives a confirmation message from the server
+func (c *Client) ReceiveConfirmation() (int, error) {
+	log.Infof("action: receive_confirmation | result: in progress | client_id: %v", c.config.ID)
+
 	reader := bufio.NewReader(c.conn)
-	sizeBuf := make([]byte, SIZE_UINT32)
-	_, err := reader.Read(sizeBuf)
+	confirmationBuf := make([]byte, CONFIRMATION_MESSAGE_SIZE)
+
+	_, err := reader.Read(confirmationBuf)
 	if err != nil {
-		log.Criticalf("action: receive_message_size | result: fail | client_id: %v | error: %v", c.config.ID, err)
-		return "", err
+		log.Criticalf("action: receive_confirmation | result: fail | client_id: %v | error: %v", c.config.ID, err)
+		return READING_ERROR, err
 	}
 
-	size := binary.BigEndian.Uint32(sizeBuf)
-	msgBuf := make([]byte, size)
-	_, err = reader.Read(msgBuf)
-	if err != nil {
-		log.Criticalf("action: receive_message | result: fail | client_id: %v | error: %v", c.config.ID, err)
-		return "", err
-	}
+	confirmation := confirmationBuf[0]
 
-	message, err := DeserializeMessage(append(sizeBuf, msgBuf...))
-	if err != nil {
-		log.Criticalf("action: deserialize_message | result: fail | client_id: %v | error: %v", c.config.ID, err)
-		return "", err
-	}
-
-	log.Infof("action: receive_message | result: success | client_id: %v | msg: %v", c.config.ID, message)
-	return message, nil
+	log.Infof("action: receive_confirmation | result: success | client_id: %v | confirmation: %v", c.config.ID, confirmation)
+	return int(confirmation), nil
 }
