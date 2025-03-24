@@ -32,9 +32,6 @@ class ProtocolServer:
         logging.info(f"action: receive_message | result: success | message: {number}")
         agency = receive_string(self._client_socket)
         logging.info(f"action: receive_message | result: success | message: {agency}")
-
-        if not first_name or not last_name or not document or not birthdate or not number or not agency:
-            return None
         
         bet = Bet(agency, first_name, last_name, document, birthdate, number)
         return bet
