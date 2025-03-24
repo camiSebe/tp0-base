@@ -58,8 +58,17 @@ func InitConfig() (*viper.Viper, error) {
 		fmt.Printf("Configuration could not be read from config file. Using env variables instead")
 	}
 
-	// Parse time.Duration variables and return an error if those variables cannot be parsed
+	// Try to read bet configuration from bet.yaml
+	betConfig := viper.New()
+	betConfig.SetConfigFile("./bet.yaml")
+	if err := betConfig.ReadInConfig(); err != nil {
+		fmt.Println("Bet configuration could not be read from bet.yaml. Using env variables instead")
+	}
 
+	// Merge bet configuration with main configuration
+	v.MergeConfigMap(betConfig.AllSettings())
+
+	// Parse time.Duration variables and return an error if those variables cannot be parsed
 	if _, err := time.ParseDuration(v.GetString("loop.period")); err != nil {
 		return nil, errors.Wrapf(err, "Could not parse CLI_LOOP_PERIOD env var as time.Duration.")
 	}
