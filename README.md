@@ -15,3 +15,9 @@ En el servidor, si todas las apuestas del _batch_ fueron procesadas correctament
 La cantidad máxima de apuestas dentro de cada _batch_ debe ser configurable desde config.yaml. Respetar la clave `batch: maxAmount`, pero modificar el valor por defecto de modo tal que los paquetes no excedan los 8kB.
 
 Por su parte, el servidor deberá responder con éxito solamente si todas las apuestas del _batch_ fueron procesadas correctamente.
+
+#### Solución
+
+Se modificó el script de python que generaba los de docker-compose para que extraiga los datasets y los clientes puedan tener como volumen el archivo que les corresponde.
+
+Cada cliente se encarga de leer su dataset y cargar su lista de Bets a mandar que luego el protocolo se encarga de enviar de la misma forma mencionada en el ej 5.
