@@ -108,14 +108,13 @@ class Server:
                     self._bets_controller.add_bet_received()
             store_bets(bets)
             if bets_failed > 0:
-                logging.debug(f"action: receive_batch_size | result: fail | cantidad: {bets_failed}")
-
+                logging.debug(f"action: apuesta_recibida | result: fail | cantidad: {self._bets_controller.bets_failed}")
                 ProtocolServer(client_sock).send_confirmation(BATCH_FAILURE)
             else:
-                logging.debug(f"action: receive_batch_size | result: success | cantidad: {len(bets)}")
+                logging.debug(f"action: apuesta_recibida | result: success | cantidad: {self._bets_controller.bets_received}")
                 ProtocolServer(client_sock).send_confirmation(BATCH_SUCCESS)
 
-        logging.info(f"action: apuesta_recibida | result: success | cantidad: {self._bets_controller.bets_received}")
+        # logging.info(f"action: apuesta_recibida | result: success | cantidad: {self._bets_controller.bets_received}")
 
     def process_bet(self, client_sock) -> Bet:
         bet = ProtocolServer(client_sock).receive_bet()
