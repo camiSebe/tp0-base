@@ -77,6 +77,7 @@ class Server:
         self._was_closed = True
 
     def process_batch_of_bets(self, client_sock):
+        bets_received = 0
         batch_size = ProtocolServer(client_sock).receive_batch_size()
         if batch_size==None:
             self._log_error('receive_batch_size', 'fail', error='Batch size did not arrive correctly')
@@ -94,11 +95,14 @@ class Server:
                     bets.append(new_bet)
             store_bets(bets)
             if bets_failed > 0:
-                logging.info(f"action: apuesta_recibida | result: fail | cantidad: {bets_failed}")
+                logging.info(f"action: receive_batch_size | result: fail | cantidad: {bets_failed}")
                 ProtocolServer(client_sock).send_confirmation(BATCH_FAILURE)
             else:
-                logging.info(f"action: apuesta_recibida | result: success | cantidad: {len(bets)}")
+                logging.info(f"action: receive_batch_size | result: success | cantidad: {len(bets)}")
+                bets_received += len(bets)
                 ProtocolServer(client_sock).send_confirmation(BATCH_SUCCESS)
+                
+        logging.info(f"action: apuesta_recibida | result: success | cantidad: {bets_received}")
 
     def process_bet(self, client_sock) -> Bet:
         bet = ProtocolServer(client_sock).receive_bet()
