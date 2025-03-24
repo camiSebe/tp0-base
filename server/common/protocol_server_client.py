@@ -34,15 +34,22 @@ class ProtocolServer:
         agency = receive_string(self._client_socket)
         logging.info(f"action: receive_message | result: success | message: {agency}")
 
+        if not first_name or not last_name or not document or not birthdate or not number or not agency:
+            return None
+        
         bet = Bet(agency, first_name, last_name, document, birthdate, number)
         return bet
     
-    def send_message(self, message: str):
+    def send_confirmation(self, bet):
         """
-        Send a message to the client
-
-        Function sends a message to the client
+        Send a confirmation message to the client including the document and the number of the bet following the format:
+        "<document> <number> <0x00>" if the bet was made successfully
+        "<document> <number> <0x01>" if the bet had a failure
         """
         # TODO: Modify the send to avoid short-writes
+        if bet:
+            message = f"{bet.document} {bet.number} {chr(0)}"
+        else:
+            message = f"{chr(0)} {chr(0)} {chr(1)}"
         self._client_socket.send("{}\n".format(message).encode('utf-8'))
     

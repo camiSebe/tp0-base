@@ -4,6 +4,7 @@ import logging
 import signal
 
 from common.protocol_server_client import ProtocolServer
+from common.utils import store_bets
 
 class Server:
     def __init__(self, port, listen_backlog):
@@ -44,17 +45,23 @@ class Server:
 
     def __handle_client_connection(self, client_sock):
         """
-        Read message from a specific client socket and closes the socket
+        Receives a Bet from a specific client socket, stores it, sends a confirmation message back 
+        and closes the socket
 
         If a problem arises in the communication with the client, the
         client socket will also be closed
         """
         try:
             bet = ProtocolServer(client_sock).receive_bet()
-            addr = client_sock.getpeername()
-            self._log_info('receive_bet', 'success', addr[0], msg=bet.log_message())
-
-            ProtocolServer(client_sock).send_message(bet)
+            if bet==None: 
+                self._log_error('receive_bet', 'fail', error='Bet did not arrive correctly')
+                ProtocolServer(client_sock).send_confirmation(None)
+            else:
+                addr = client_sock.getpeername()
+                self._log_info('receive_bet', 'success', addr[0], msg=bet.log_message())
+                store_bets([bet])
+                self._log_info('apuesta_almacenada', 'success', None, None, bet.document, bet.number)
+                ProtocolServer(client_sock).send_confirmation(bet)
         except OSError as e:
             self._log_error('receive_message', 'fail', error=e)
         finally:
@@ -74,7 +81,7 @@ class Server:
         self._was_closed = True
 
     ### Logging helper functions
-    def _log_info(self, action, result, ip=None, msg=None):
+    def _log_info(self, action, result, ip=None, msg=None, doc=None, number=None):
         """
         Helper function for logging informational messages
         """
@@ -83,6 +90,10 @@ class Server:
             log_message += f" | ip: {ip}"
         if msg:
             log_message += f" | msg: {msg}"
+        if doc:
+            log_message += f" | dni: {doc}"
+        if number:
+            log_message += f" | numero: {number}"
         logging.info(log_message)
 
     def _log_error(self, action, result, error=None):
