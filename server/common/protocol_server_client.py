@@ -2,12 +2,24 @@ import socket
 import logging
 
 from common.utils import Bet
-from common.receiver import receive_string
+from common.receiver import receive_string, receive_data
 from common.sender import send
 
+SIZE_OF_UINT32 = 4
 class ProtocolServer:
     def __init__(self, client_socket: socket.socket):
         self._client_socket = client_socket
+
+    def receive_batch_size(self) -> int:
+        """
+        Receives the batch size from the client
+        """
+        batch_size = receive_data(self._client_socket, SIZE_OF_UINT32)
+        if batch_size == "":
+            logging.error("action: receive_batch_size | result: fail | error: Batch size did not arrive correctly")
+            return None
+        logging.debug(f"action: receive_batch_size | result: success | batch_size: {batch_size}")
+        return int.from_bytes(batch_size, byteorder="big")
 
     def receive_bet(self) -> Bet:
         """
@@ -21,24 +33,14 @@ class ProtocolServer:
         - Agency
         """
         first_name = receive_string(self._client_socket)
-        logging.debug(f"action: receive_message | result: success | message: {first_name}")
-
         last_name = receive_string(self._client_socket)
-        logging.debug(f"action: receive_message | result: success | message: {last_name}")
-
         document = receive_string(self._client_socket)
-        logging.debug(f"action: receive_message | result: success | message: {document}")
-
         birthdate = receive_string(self._client_socket)
-        logging.debug(f"action: receive_message | result: success | message: {birthdate}")
-
         number = receive_string(self._client_socket)
-        logging.debug(f"action: receive_message | result: success | message: {number}")
-
         agency = receive_string(self._client_socket)
-        logging.debug(f"action: receive_message | result: success | message: {agency}")
         
         bet = Bet(agency, first_name, last_name, document, birthdate, number)
+        logging.debug(f"action: receive_bet | result: success | First Name: {first_name} | Last Name: {last_name} | Document: {document} | Birthdate: {birthdate} | Number: {number} | Agency: {agency}")
         return bet
     
     def send_confirmation(self, bet_result):
@@ -48,5 +50,5 @@ class ProtocolServer:
         <0x01>" if the bet had a failure
         """
         send(self._client_socket, bet_result)
-        logging.info(f"action: send_confirmation_message | result: success | message: {bet_result}")
+        logging.debug(f"action: send_confirmation_message | result: success | message: {bet_result}")
     

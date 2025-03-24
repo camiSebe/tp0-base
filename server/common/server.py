@@ -4,10 +4,13 @@ import logging
 import signal
 
 from common.protocol_server_client import ProtocolServer
-from common.utils import store_bets
+from common.utils import store_bets, Bet
 
 BET_SUCCESS = 0
 BET_FAILURE = 1
+
+BATCH_SUCCESS = 0
+BATCH_FAILURE = 1
 
 class Server:
     def __init__(self, port, listen_backlog):
@@ -41,9 +44,9 @@ class Server:
         Then connection created is printed and returned
         """
         # Connection arrived
-        self._log_info('accept_connections', 'in_progress')
+        self._log_debug('accept_connections', 'in_progress')
         c, addr = self._server_socket.accept()
-        self._log_info('accept_connections', 'success', addr[0])
+        self._log_debug('accept_connections', 'success', addr[0])
         return c
 
     def __handle_client_connection(self, client_sock):
@@ -55,23 +58,13 @@ class Server:
         client socket will also be closed
         """
         try:
-            bet = ProtocolServer(client_sock).receive_bet()
-            if bet==None: 
-                self._log_error('receive_bet', 'fail', error='Bet did not arrive correctly')
-                ProtocolServer(client_sock).send_confirmation(BET_FAILURE)
-            else:
-                addr = client_sock.getpeername()
-                self._log_info('receive_bet', 'success', addr[0], msg=bet.log_message())
-                store_bets([bet])
-                self._log_info('apuesta_almacenada', 'success', None, None, bet.document, bet.number)
-                ProtocolServer(client_sock).send_confirmation(BET_SUCCESS)
+            self.process_batch_of_bets(client_sock)
         except OSError as e:
             self._log_error('receive_message', 'fail', error=e)
         finally:
             addr = client_sock.getpeername()
-            self._log_info('close_connection', 'success', addr[0])
+            self._log_debug('close_connection', 'success', addr[0])
             client_sock.close()
-
 
     def stop_server(self, signum, frame):
         """
@@ -83,8 +76,54 @@ class Server:
         self._server_socket.close()
         self._was_closed = True
 
+    def process_batch_of_bets(self, client_sock):
+        batch_size = ProtocolServer(client_sock).receive_batch_size()
+        if batch_size==None:
+            self._log_error('receive_batch_size', 'fail', error='Batch size did not arrive correctly')
+            ProtocolServer(client_sock).send_confirmation(BATCH_FAILURE)
+        else:
+            addr = client_sock.getpeername()
+            self._log_debug('receive_batch_size', 'success', addr[0], msg=f"batch_size: {batch_size}")
+            bets = []
+            bets_failed = 0
+            for _ in range(batch_size):
+                new_bet = self.process_bet(client_sock)
+                if new_bet==None:
+                    bets_failed += 1
+                else:
+                    bets.append(new_bet)
+            store_bets(bets)
+            if bets_failed > 0:
+                logging.info(f"action: store_bets | result: fail | cantidad: {bets_failed}")
+                ProtocolServer(client_sock).send_confirmation(BATCH_FAILURE)
+            else:
+                logging.info(f"action: store_bets | result: success | cantidad: {len(bets)}")
+                ProtocolServer(client_sock).send_confirmation(BATCH_SUCCESS)
+
+    def process_bet(self, client_sock) -> Bet:
+        bet = ProtocolServer(client_sock).receive_bet()
+        if bet==None: 
+            self._log_error('receive_bet', 'fail', error='Bet did not arrive correctly')
+            return None
+        else:
+            addr = client_sock.getpeername()
+            self._log_debug('receive_bet', 'success', addr[0], msg=bet.log_message())
+            return bet
+
     ### Logging helper functions
-    def _log_info(self, action, result, ip=None, msg=None, doc=None, number=None):
+    def _log_info(self, action, result, ip=None, msg=None):
+        """
+        Helper function for logging informational messages
+        """
+        log_message = f"action: {action} | result: {result}"
+        if ip:
+            log_message += f" | ip: {ip}"
+        if msg:
+            log_message += f" | msg: {msg}"
+        logging.info(log_message)
+
+        ### Logging helper functions
+    def _log_debug(self, action, result, ip=None, msg=None, doc=None, number=None):
         """
         Helper function for logging informational messages
         """
@@ -97,7 +136,7 @@ class Server:
             log_message += f" | dni: {doc}"
         if number:
             log_message += f" | numero: {number}"
-        logging.info(log_message)
+        logging.debug(log_message)
 
     def _log_error(self, action, result, error=None):
         """

@@ -5,6 +5,17 @@ import (
 	"encoding/binary"
 )
 
+// SendBatchSize sends a uint32 through the connection
+func SenderSendBatchSize(conn net.Conn, batchSize uint32) error {
+	err := binary.Write(conn, binary.BigEndian, batchSize)
+	if err != nil {
+		log.Criticalf("action: SendBatchSize | result: fail | error: %v", err)
+		return err
+	}
+	log.Debugf("action: SendBatchSize | result: success | BatchSize: %v", batchSize)
+	return nil
+}
+
 // SendSerializedBet sends:
 // - len(nombre) in 1 byte
 // - nombre
