@@ -12,6 +12,17 @@ BET_FAILURE = 1
 BATCH_SUCCESS = 0
 BATCH_FAILURE = 1
 
+class BetsController:
+    def __init__(self):
+        self.bets_received = 0
+        self.bets_failed = 0
+
+    def add_bet_received(self):
+        self.bets_received += 1
+    
+    def add_bet_failed(self):
+        self.bets_failed += 1
+
 class Server:
     def __init__(self, port, listen_backlog):
         # Initialize server socket
@@ -19,6 +30,7 @@ class Server:
         self._server_socket.bind(('', port))
         self._server_socket.listen(listen_backlog)
         self._was_closed = False
+        self._bets_controller = BetsController()
         signal.signal(signal.SIGTERM, self.stop_server)
 
     def run(self):
@@ -77,7 +89,6 @@ class Server:
         self._was_closed = True
 
     def process_batch_of_bets(self, client_sock):
-        bets_received = 0
         batch_size = ProtocolServer(client_sock).receive_batch_size()
         if batch_size==None:
             self._log_error('receive_batch_size', 'fail', error='Batch size did not arrive correctly')
@@ -91,18 +102,20 @@ class Server:
                 new_bet = self.process_bet(client_sock)
                 if new_bet==None:
                     bets_failed += 1
+                    self._bets_controller.add_bet_failed()
                 else:
                     bets.append(new_bet)
+                    self._bets_controller.add_bet_received()
             store_bets(bets)
             if bets_failed > 0:
-                logging.info(f"action: receive_batch_size | result: fail | cantidad: {bets_failed}")
+                logging.debug(f"action: receive_batch_size | result: fail | cantidad: {bets_failed}")
+
                 ProtocolServer(client_sock).send_confirmation(BATCH_FAILURE)
             else:
-                logging.info(f"action: receive_batch_size | result: success | cantidad: {len(bets)}")
-                bets_received += len(bets)
+                logging.debug(f"action: receive_batch_size | result: success | cantidad: {len(bets)}")
                 ProtocolServer(client_sock).send_confirmation(BATCH_SUCCESS)
-                
-        logging.info(f"action: apuesta_recibida | result: success | cantidad: {bets_received}")
+
+        logging.info(f"action: apuesta_recibida | result: success | cantidad: {len(self._bets_controller.bets_received)}")
 
     def process_bet(self, client_sock) -> Bet:
         bet = ProtocolServer(client_sock).receive_bet()
