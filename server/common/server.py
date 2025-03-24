@@ -94,10 +94,10 @@ class Server:
                     bets.append(new_bet)
             store_bets(bets)
             if bets_failed > 0:
-                logging.info(f"action: store_bets | result: fail | cantidad: {bets_failed}")
+                logging.info(f"action: apuesta_recibida | result: fail | cantidad: {bets_failed}")
                 ProtocolServer(client_sock).send_confirmation(BATCH_FAILURE)
             else:
-                logging.info(f"action: store_bets | result: success | cantidad: {len(bets)}")
+                logging.info(f"action: apuesta_recibida | result: success | cantidad: {len(bets)}")
                 ProtocolServer(client_sock).send_confirmation(BATCH_SUCCESS)
 
     def process_bet(self, client_sock) -> Bet:
