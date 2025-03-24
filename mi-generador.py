@@ -35,6 +35,7 @@ def generar_docker_compose(archivo_salida, cant_clientes):
             "container_name": f"client{i}",
             "image": "client:latest",
             "entrypoint": "/client",
+            "env_file": ".env",
             "environment": [
                 f"CLI_ID={i}",                
                 f"NOMBRE=${{NOMBRE}}",
