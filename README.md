@@ -106,32 +106,36 @@ Se deberá implementar un módulo de comunicación entre el cliente y el servido
 
 ##### Envío de mensajes
 
-Se van a mandar 2 mensajes por cada dato que se tenga que enviar, el primero sera el size del dato encodeado como un Uint32, y el siguiente el dato en si encodeado como enteros de bytes.
+Se van a mandar 2 mensajes por cada dato que se tenga que enviar, el primero sera el size del dato encodeado como un Uint8, y el siguiente el dato en si encodeado como enteros de bytes. Elegí un Uint8 porque, a priori, no parece haber ningun campo que pueda superar los 255 bytes que es el límite del Uint8.
 
 Una representación "gráfica" sería:
 
-+-----------------+--------------------------------+
-| Field Length 1  | Field Data 1                  |
-| (4 bytes)      | "Santiago Lionel" (15 bytes)  |
-|   00 00 00 0F  | 53 61 6E 74 69 61 67 6F 20 4C  |
-|                | 69 6F 6E 65 6C                |
-+-----------------+--------------------------------+
-| Field Length 2  | Field Data 2                  |
-| (4 bytes)      | "Lorca" (5 bytes)             |
-|   00 00 00 05  | 4C 6F 72 63 61                |
-+-----------------+--------------------------------+
-| Field Length 3  | Field Data 3                  |
-| (4 bytes)      | "30904465" (8 bytes)          |
-|   00 00 00 08  | 33 30 39 30 34 34 36 35        |
-+-----------------+--------------------------------+
-| Field Length 4  | Field Data 4                  |
-| (4 bytes)      | "1999-03-17" (10 bytes)       |
-|   00 00 00 0A  | 31 39 39 39 2D 30 33 2D 31 37  |
-+-----------------+--------------------------------+
-| Field Length 5  | Field Data 5                  |
-| (4 bytes)      | "7574" (4 bytes)              |
-|   00 00 00 04  | 37 35 37 34                    |
-+-----------------+--------------------------------+
++--------------+--------------------------------+
+| Field Length | Field Data - First Name       |
+| (1 byte)     | "Santiago Lionel" (15 bytes)  |
+|    0F        | 53 61 6E 74 69 61 67 6F 20 4C |
+|              | 69 6F 6E 65 6C                |
++--------------+--------------------------------+
+| Field Length | Field Data - Last Name        |
+| (1 byte)     | "Lorca" (5 bytes)             |
+|    05        | 4C 6F 72 63 61                |
++--------------+--------------------------------+
+| Field Length | Field Data - Document         |
+| (1 byte)     | "30904465" (8 bytes)          |
+|    08        | 33 30 39 30 34 34 36 35       |
++--------------+--------------------------------+
+| Field Length | Field Data - Birthdate        |
+| (1 byte)     | "1999-03-17" (10 bytes)       |
+|    0A        | 31 39 39 39 2D 30 33 2D 31 37 |
++--------------+--------------------------------+
+| Field Length | Field Data - Number           |
+| (1 byte)     | "7574" (4 bytes)              |
+|    04        | 37 35 37 34                   |
++--------------+--------------------------------+
+| Field Length | Field Data - Agency           |
+| (1 byte)     | "1" (1 byte)                  |
+|    01        | 31                             |
++--------------+--------------------------------+
 
 De esta forma me aseguro de que el servidor primero reciba el size del dato que tiene que leer, y luego lo reciba. De esta forma puedo chequear si efectivamente me llegaron todos los datos que envie.
 

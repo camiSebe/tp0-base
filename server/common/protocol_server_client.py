@@ -1,7 +1,7 @@
 import socket
 import logging
 
-from common.bet import Bet
+from common.utils import Bet
 from common.receiver import receive_string
 
 SIZE_OF_UINT32 = 4
@@ -14,20 +14,27 @@ class ProtocolServer:
         """
         Receives the data of the bet from the client and stores it in a Bet Object
         Data is received in the following order:
-        - Name
+        - First Name
         - Last Name
-        - DNI
+        - Document
         - Birthdate
         - Number
+        - Agency
         """
-        nombre = receive_string(self._client_socket)
-        apellido = receive_string(self._client_socket)
-        dni = receive_string(self._client_socket)
-        nacimiento = receive_string(self._client_socket)
-        numero = receive_string(self._client_socket)
+        first_name = receive_string(self._client_socket)
+        logging.info(f"action: receive_message | result: success | message: {first_name}")
+        last_name = receive_string(self._client_socket)
+        logging.info(f"action: receive_message | result: success | message: {last_name}")
+        document = receive_string(self._client_socket)
+        logging.info(f"action: receive_message | result: success | message: {document}")
+        birthdate = receive_string(self._client_socket)
+        logging.info(f"action: receive_message | result: success | message: {birthdate}")
+        number = receive_string(self._client_socket)
+        logging.info(f"action: receive_message | result: success | message: {number}")
+        agency = receive_string(self._client_socket)
+        logging.info(f"action: receive_message | result: success | message: {agency}")
 
-        bet = Bet(nombre, apellido, dni, nacimiento, numero)
-        # bet.print_bet()
+        bet = Bet(agency, first_name, last_name, document, birthdate, number)
         return bet
     
     def send_message(self, message: str):

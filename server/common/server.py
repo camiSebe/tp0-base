@@ -52,7 +52,8 @@ class Server:
         try:
             bet = ProtocolServer(client_sock).receive_bet()
             addr = client_sock.getpeername()
-            self._log_info('receive_message', 'success', addr[0], msg=bet)
+            self._log_info('receive_bet', 'success', addr[0], msg=bet.log_message())
+
             ProtocolServer(client_sock).send_message(bet)
         except OSError as e:
             self._log_error('receive_message', 'fail', error=e)

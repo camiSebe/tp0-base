@@ -46,6 +46,7 @@ func InitConfig() (*viper.Viper, error) {
 	v.BindEnv("bet.documento")
 	v.BindEnv("bet.nacimiento")
 	v.BindEnv("bet.numero")
+	v.BindEnv("bet.agencia")
 
 
 	// Try to read configuration from config file. If config file
@@ -126,10 +127,11 @@ func main() {
 		DNI:        v.GetString("bet.documento"),
 		Nacimiento: v.GetString("bet.nacimiento"),
 		Numero:     v.GetString("bet.numero"),
+		Agencia:    v.GetString("bet.agencia"),
 	}
 
-	log.Infof("action: config_bet | result: success | Nombre: %s | Apellido: %s | DNI: %s | Nacimiento: %s | Número: %s",
-		betConfig.Nombre, betConfig.Apellido, betConfig.DNI, betConfig.Nacimiento, betConfig.Numero)
+	log.Infof("action: config_bet | result: success | Nombre: %s | Apellido: %s | DNI: %s | Nacimiento: %s | Número: %s | Agencia: %s",
+		betConfig.Nombre, betConfig.Apellido, betConfig.DNI, betConfig.Nacimiento, betConfig.Numero, betConfig.Agencia)
 
 	client := common.NewClient(clientConfig, betConfig)
 

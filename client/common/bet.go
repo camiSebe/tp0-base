@@ -6,4 +6,5 @@ type BetConfig struct {
 	DNI           string
 	Nacimiento    string
 	Numero        string
+	Agencia		  string
 }

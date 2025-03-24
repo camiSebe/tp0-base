@@ -24,6 +24,9 @@ class Bet:
         self.birthdate = datetime.date.fromisoformat(birthdate)
         self.number = int(number)
 
+    def log_message(self):
+        return f"First name: {self.first_name} | Last name: {self.last_name} | Document: {self.document} | Birthdate: {self.birthdate} | Number: {self.number} | Agency: {self.agency}"
+
 """ Checks whether a bet won the prize or not. """
 def has_won(bet: Bet) -> bool:
     return bet.number == LOTTERY_WINNER_NUMBER
