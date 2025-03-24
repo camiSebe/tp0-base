@@ -22,16 +22,24 @@ class ProtocolServer:
         """
         first_name = receive_string(self._client_socket)
         logging.info(f"action: receive_message | result: success | message: {first_name}")
+
         last_name = receive_string(self._client_socket)
         logging.info(f"action: receive_message | result: success | message: {last_name}")
+
         document = receive_string(self._client_socket)
         logging.info(f"action: receive_message | result: success | message: {document}")
+
         birthdate = receive_string(self._client_socket)
         logging.info(f"action: receive_message | result: success | message: {birthdate}")
+
         number = receive_string(self._client_socket)
         logging.info(f"action: receive_message | result: success | message: {number}")
+
         agency = receive_string(self._client_socket)
         logging.info(f"action: receive_message | result: success | message: {agency}")
+        # If the agency is empty, it is set to 0
+        if agency == "":
+            agency = 0
         
         bet = Bet(agency, first_name, last_name, document, birthdate, number)
         return bet
