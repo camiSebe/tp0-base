@@ -91,7 +91,7 @@ func (c *Client) ProcessBets() {
 	}
 
 	for i := 0; i < batches; i++ {
-		log.Infof("action: sending_batch | result: in_progess | client_id: %v | batch: %v / %v", c.config.ID, i, batches)
+		log.Infof("action: sending_batch | result: in_progress | client_id: %v | batch: %v / %v", c.config.ID, i, batches)
 		c.createClientSocket()
 		c.ProcessBatch(i)
 		confirmation, err := c.ReceiveConfirmation()
