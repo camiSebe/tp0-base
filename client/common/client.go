@@ -115,7 +115,7 @@ func (c *Client) ProcessBets() {
 // StartClientLoop Send messages to the client until some time threshold is met
 func (c *Client) StartClientLoop() {
 	var err error
-	c.bets, err = LoadBetsFromCSV(c.config.ID, fmt.Sprintf(".data/dataset/agency-%s.csv", c.config.ID))
+	c.bets, err = LoadBetsFromCSV(c.config.ID, fmt.Sprintf(".data/agency-%s.csv", c.config.ID))
 	if err != nil {
 		log.Criticalf("action: load_bets | result: fail | client_id: %v | error: %v", c.config.ID, err)
 		return

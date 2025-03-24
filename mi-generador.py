@@ -48,7 +48,7 @@ def generar_docker_compose(archivo_salida, cant_clientes):
             "depends_on": ["server"],
             "volumes": [
                 "./client/config.yaml:/config.yaml",
-                f"./.data/dataset:/.data/dataset"
+                f"./.data:/.data"
             ]
         }
     
@@ -68,6 +68,6 @@ if __name__ == "__main__":
         print("No dataset found")
         sys.exit(1)
     
-    extract_dataset_zip(".data/dataset.zip", ".data/dataset")
+    extract_dataset_zip(".data/dataset.zip", ".data")
 
     generar_docker_compose(archivo_salida, cant_clientes)
