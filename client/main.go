@@ -41,12 +41,12 @@ func InitConfig() (*viper.Viper, error) {
 	v.BindEnv("log", "level")
 
 	// Add env variables for bet
-	v.BindEnv("bet.nombre")
-	v.BindEnv("bet.apellido")
-	v.BindEnv("bet.documento")
-	v.BindEnv("bet.nacimiento")
-	v.BindEnv("bet.numero")
-	v.BindEnv("bet.agencia")
+	v.BindEnv("nombre")
+	v.BindEnv("apellido")
+	v.BindEnv("documento")
+	v.BindEnv("nacimiento")
+	v.BindEnv("numero")
+	v.BindEnv("agencia")
 
 
 	// Try to read configuration from config file. If config file
@@ -57,16 +57,6 @@ func InitConfig() (*viper.Viper, error) {
 	if err := v.ReadInConfig(); err != nil {
 		fmt.Printf("Configuration could not be read from config file. Using env variables instead")
 	}
-
-	// Try to read bet configuration from bet.yaml
-	betConfig := viper.New()
-	betConfig.SetConfigFile("./bet.yaml")
-	if err := betConfig.ReadInConfig(); err != nil {
-		fmt.Println("Bet configuration could not be read from bet.yaml. Using env variables instead")
-	}
-
-	// Merge bet configuration with main configuration
-	v.MergeConfigMap(betConfig.AllSettings())
 
 	// Parse time.Duration variables and return an error if those variables cannot be parsed
 	if _, err := time.ParseDuration(v.GetString("loop.period")); err != nil {
@@ -131,12 +121,12 @@ func main() {
 	}
 
 	betConfig := common.BetConfig{
-		Nombre:     v.GetString("bet.nombre"),
-		Apellido:   v.GetString("bet.apellido"),
-		DNI:        v.GetString("bet.documento"),
-		Nacimiento: v.GetString("bet.nacimiento"),
-		Numero:     v.GetString("bet.numero"),
-		Agencia:    v.GetString("bet.agencia"),
+		Nombre:     v.GetString("nombre"),
+		Apellido:   v.GetString("apellido"),
+		DNI:        v.GetString("documento"),
+		Nacimiento: v.GetString("nacimiento"),
+		Numero:     v.GetString("numero"),
+		Agencia:    v.GetString("agencia"),
 	}
 
 	log.Infof("action: config_bet | result: success | Nombre: %s | Apellido: %s | DNI: %s | Nacimiento: %s | Número: %s | Agencia: %s",

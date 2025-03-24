@@ -46,8 +46,7 @@ def generar_docker_compose(archivo_salida, cant_clientes):
             "networks": ["testing_net"],
             "depends_on": ["server"],
             "volumes": [
-                "./client/config.yaml:/config.yaml",
-                "./client/bet.yaml:/bet.yaml"
+                "./client/config.yaml:/config.yaml"
             ]
         }
     
