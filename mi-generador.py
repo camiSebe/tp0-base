@@ -36,12 +36,18 @@ def generar_docker_compose(archivo_salida, cant_clientes):
             "image": "client:latest",
             "entrypoint": "/client",
             "environment": [
-                f"CLI_ID={i}",
+                f"CLI_ID={i}",                
+                f"NOMBRE=${{NOMBRE}}",
+                f"APELLIDO=${{APELLIDO}}",
+                f"DOCUMENTO=${{DOCUMENTO}}",
+                f"NACIMIENTO=${{NACIMIENTO}}",
+                f"NUMERO=${{NUMERO}}",
             ],
             "networks": ["testing_net"],
             "depends_on": ["server"],
             "volumes": [
-                "./client/config.yaml:/config.yaml"
+                "./client/config.yaml:/config.yaml",
+                "./client/bet.yaml:/bet.yaml"
             ]
         }
     
