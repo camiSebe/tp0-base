@@ -56,9 +56,9 @@ class Server:
         Then connection created is printed and returned
         """
         # Connection arrived
-        self._log_debug('accept_connections', 'in_progress')
+        self._log_info('accept_connections', 'in_progress')
         c, addr = self._server_socket.accept()
-        self._log_debug('accept_connections', 'success', addr[0])
+        self._log_info('accept_connections', 'success', addr[0])
         return c
 
     def __handle_client_connection(self, client_sock):
@@ -75,7 +75,7 @@ class Server:
             self._log_error('receive_message', 'fail', error=e)
         finally:
             addr = client_sock.getpeername()
-            self._log_debug('close_connection', 'success', addr[0])
+            self._log_info('close_connection', 'success', addr[0])
             client_sock.close()
 
     def stop_server(self, signum, frame):
@@ -108,10 +108,10 @@ class Server:
                     self._bets_controller.add_bet_received()
             store_bets(bets)
             if bets_failed > 0:
-                logging.debug(f"action: apuesta_recibida | result: fail | cantidad: {self._bets_controller.bets_failed}")
+                logging.info(f"action: apuesta_recibida | result: fail | cantidad: {self._bets_controller.bets_failed}")
                 ProtocolServer(client_sock).send_confirmation(BATCH_FAILURE)
             else:
-                logging.debug(f"action: apuesta_recibida | result: success | cantidad: {self._bets_controller.bets_received}")
+                logging.info(f"action: apuesta_recibida | result: success | cantidad: {self._bets_controller.bets_received}")
                 ProtocolServer(client_sock).send_confirmation(BATCH_SUCCESS)
 
         # logging.info(f"action: apuesta_recibida | result: success | cantidad: {self._bets_controller.bets_received}")
