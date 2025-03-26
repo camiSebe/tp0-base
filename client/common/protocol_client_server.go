@@ -51,7 +51,7 @@ func (p *ProtocolClient) SendBatch(batch []Bet) error {
 
 // SendStartOfBatchCode sends the start of batch code to the server
 func (p *ProtocolClient) SendStartOfBatchCode() error {
-	log.Debugf("action: sending_start_of_batch_code | result: in_progress")
+	// log.Debugf("action: sending_start_of_batch_code | result: in_progress")
 	code := serializeUint8(START_OF_BATCH_MESSAGE_CODE)
 	if code == nil {
 		log.Criticalf("action: sending_start_of_batch_code | result: fail | error: Not able to serialize as uint8")
@@ -63,14 +63,14 @@ func (p *ProtocolClient) SendStartOfBatchCode() error {
 		log.Criticalf("action: sending_start_of_batch_code | result: fail | error: %v", err)
 		return err
 	}
-	log.Debugf("action: sending_start_of_batch_code | result: success")
+	// log.Debugf("action: sending_start_of_batch_code | result: success")
 	return nil
 }
 
 
 // SendBatchSize sends the batch size to the server
 func (p *ProtocolClient) SendBatchSize(batchSize int) error {
-	log.Debugf("action: sending_batch_size | result: in_progress")
+	// log.Debugf("action: sending_batch_size | result: in_progress")
 
 	batchSizeBytes := serializeUint32(batchSize)
 
@@ -80,13 +80,13 @@ func (p *ProtocolClient) SendBatchSize(batchSize int) error {
 		return err
 	}
 
-	log.Debugf("action: sending_batch_size | result: success")
+	// log.Debugf("action: sending_batch_size | result: success")
 	return nil
 }
 
 // SendBet sends a bet to the server
 func (p *ProtocolClient) SendBet(bet Bet) error {
-	log.Debugf("action: sending_bet | result: in_progress")
+	// log.Debugf("action: sending_bet | result: in_progress")
 
 	// Because i'm sending a batch of bets, server already knows that the message is a bet -> no need to send the message code
 	/*
@@ -118,13 +118,13 @@ func (p *ProtocolClient) SendBet(bet Bet) error {
 		}
 	}
 
-	log.Debugf("action: sending_bet | result: success")
+	// log.Debugf("action: sending_bet | result: success")
 	return nil
 }
 
 // ReceiveConfirmation receives a confirmation message from the server
 func (p *ProtocolClient) ReceiveConfirmation() (int, error) {
-	log.Debugf("action: receive_confirmation | result: in_progress")
+	// log.Debugf("action: receive_confirmation | result: in_progress")
 
 	data := make([]byte, CONFIRMATION_MESSAGE_SIZE)
 	err := ReceiveAll(p.conn, data)
@@ -134,13 +134,13 @@ func (p *ProtocolClient) ReceiveConfirmation() (int, error) {
 	}
 
 	confirmation := int(data[0])
-	log.Debugf("action: receive_confirmation | result: success | confirmation: %v", confirmation)
+	// log.Debugf("action: receive_confirmation | result: success | confirmation: %v", confirmation)
 	return confirmation, nil
 }
 
 // SendEndOfBatchesCode sends the end of batches code to the server
 func (p *ProtocolClient) SendEndOfBatchesCode() error {
-	log.Debugf("action: sending_end_of_batches_code | result: in_progress")
+	// log.Debugf("action: sending_end_of_batches_code | result: in_progress")
 
 	code := serializeUint8(END_OF_BATCH_MESSAGE_CODE)
 	if code == nil {
@@ -154,13 +154,13 @@ func (p *ProtocolClient) SendEndOfBatchesCode() error {
 		return err
 	}
 
-	log.Debugf("action: sending_end_of_batches_code | result: success")
+	// log.Debugf("action: sending_end_of_batches_code | result: success")
 	return nil
 }
 
 // SendGetWinnersCode sends the get winners code to the server
 func (p *ProtocolClient) SendGetWinnersCode() error {
-	log.Debugf("action: sending_get_winners_code | result: in_progress")
+	// log.Debugf("action: sending_get_winners_code | result: in_progress")
 	code := serializeUint8(GET_WINNERS_MESSAGE_CODE)
 	if code == nil {
 		log.Criticalf("action: sending_get_winners_code | result: fail | error: Not able to serialize as uint8")
@@ -173,14 +173,14 @@ func (p *ProtocolClient) SendGetWinnersCode() error {
 		return err
 	}
 
-	log.Debugf("action: sending_get_winners_code | result: success")
+	// log.Debugf("action: sending_get_winners_code | result: success")
 	return nil
 }
 
 
 // SendAgencyNumber sends the agency number to the server
 func (p *ProtocolClient) SendAgencyNumber(agency int) error {
-	log.Debugf("action: sending_agency_number | result: in_progress")
+	// log.Debugf("action: sending_agency_number | result: in_progress")
 
 	agencyBytes := serializeUint32(agency)
 	if agencyBytes == nil {
@@ -194,7 +194,7 @@ func (p *ProtocolClient) SendAgencyNumber(agency int) error {
 		return err
 	}
 
-	log.Debugf("action: sending_agency_number | result: success")
+	// log.Debugf("action: sending_agency_number | result: success")
 	return nil
 }
 

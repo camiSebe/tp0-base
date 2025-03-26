@@ -31,7 +31,7 @@ class ProtocolServer:
         if deserialize_message_code == "":
             logging.error("action: receive_message_code | result: fail | error: Message code did not arrive correctly")
             return None
-        logging.debug(f"action: receive_message_code | result: success | message_code: {deserialize_message_code}")
+        # logging.debug(f"action: receive_message_code | result: success | message_code: {deserialize_message_code}")
         return deserialize_message_code
 
     def receive_batch_size(self) -> int:
@@ -43,7 +43,7 @@ class ProtocolServer:
         if deserialize_batch_size == "":
             logging.error("action: receive_batch_size | result: fail | error: Batch size did not arrive correctly")
             return None
-        logging.debug(f"action: receive_batch_size | result: success | batch_size: {deserialize_batch_size}")
+        # logging.debug(f"action: receive_batch_size | result: success | batch_size: {deserialize_batch_size}")
         return deserialize_batch_size
 
     def receive_bet(self) -> Bet:
@@ -65,7 +65,7 @@ class ProtocolServer:
         agency = receive_string(self._client_socket)
         
         bet = Bet(agency, first_name, last_name, document, birthdate, number)
-        logging.debug(f"action: receive_bet | result: success | First Name: {first_name} | Last Name: {last_name} | Document: {document} | Birthdate: {birthdate} | Number: {number} | Agency: {agency}")
+        # logging.debug(f"action: receive_bet | result: success | First Name: {first_name} | Last Name: {last_name} | Document: {document} | Birthdate: {birthdate} | Number: {number} | Agency: {agency}")
         return bet
     
     def send_confirmation(self, bet_result : int):
@@ -75,7 +75,7 @@ class ProtocolServer:
         <0x01>" if the bet had a failure
         """
         send(self._client_socket, bet_result.to_bytes(SIZE_OF_UINT8, byteorder="big"))
-        logging.debug(f"action: send_confirmation_message | result: success | message: {bet_result}")
+        # logging.debug(f"action: send_confirmation_message | result: success | message: {bet_result}")
     
 
     def receive_agency_number(self) -> int:
@@ -87,7 +87,7 @@ class ProtocolServer:
         if deserialize_agency == "":
             logging.error("action: receive_agency_number | result: fail | error: Agency number did not arrive correctly")
             return None
-        logging.info(f"action: receive_agency_number | result: success | agency: {deserialize_agency}")
+        # logging.debug(f"action: receive_agency_number | result: success | agency: {deserialize_agency}")
 
         self.set_agency(deserialize_agency)
         return deserialize_agency
@@ -99,9 +99,9 @@ class ProtocolServer:
         self.send_list_of_winners_size(len(winners))
 
         for winner in winners:
-            logging.info(f"action: send_winners_to_agency | result: in_progress | documento: {winner.document} | agencia: {winner.agency}")
+            # logging.debug(f"action: send_winners_to_agency | result: in_progress | documento: {winner.document} | agencia: {winner.agency}")
             send(self._client_socket, int(winner.document).to_bytes(SIZE_OF_UINT32, byteorder="big"))
-            logging.info(f"action: send_winners_to_agency | result: success | documento: {winner.document} | agencia: {winner.agency}")
+            # logging.debug(f"action: send_winners_to_agency | result: success | documento: {winner.document} | agencia: {winner.agency}")
 
         
     def send_list_of_winners_size(self, size: int):
