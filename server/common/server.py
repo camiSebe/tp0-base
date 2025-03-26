@@ -12,8 +12,6 @@ BET_FAILURE = 1
 BATCH_SUCCESS = 0
 BATCH_FAILURE = 1
 
-TOTAL_AGENCYS = 5
-
 NEW_BET_MESSAGE = 1
 NEW_BATCH_MESSAGE = 2
 END_OF_BATCHES = 3
@@ -22,7 +20,7 @@ GET_WINNERS = 4
 SUCCESS_SENDING_WINNERS = 0
 
 class Server:
-    def __init__(self, port, listen_backlog):
+    def __init__(self, port, listen_backlog, clients_count):
         # Initialize server socket
         self._server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self._server_socket.bind(('', port))
@@ -30,6 +28,7 @@ class Server:
         self._was_closed = False
         self._clients_conected = []
         self._agencys_completed = 0
+        self._total_agencies = clients_count
 
         signal.signal(signal.SIGTERM, self.stop_server)
         signal.signal(signal.SIGINT, self.stop_server)
@@ -90,8 +89,10 @@ class Server:
                 elif message_code == GET_WINNERS:
                     self._agencys_completed += 1
                     self._log_info('receive_message_code', 'success', msg='Get winners received')
+                    
+                    self._log_info('waiting_for_all_end_of_batches', 'in_progress', msg=f"agencies_completed: {self._agencys_completed} | total_agencies: {self._total_agencies}")
 
-                    if self._agencys_completed == TOTAL_AGENCYS:
+                    if self._agencys_completed == self._total_agencies:
                         self._log_debug('waiting_for_all_end_of_batches', 'success')
                         self.process_winners()
                     break
@@ -101,7 +102,7 @@ class Server:
 
         except OSError as e:
             self._log_error('receive_message', 'fail', error=e)
-            
+
         except Exception as e:
             self._log_error('receive_message', 'fail', error=e)
 
@@ -114,6 +115,9 @@ class Server:
         self._log_info('stop_server', 'success')
         self._server_socket.close()
         self._was_closed = True
+        for client in self._clients_conected:
+            client.close()
+        self._clients_conected = []
 
     def process_batch_of_bets(self, protocol_server: ProtocolServer):
         batch_size = protocol_server.receive_batch_size()

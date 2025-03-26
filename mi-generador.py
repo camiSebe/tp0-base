@@ -17,6 +17,7 @@ def generar_docker_compose(archivo_salida, cant_clientes):
                 "entrypoint": "python3 /main.py",
                 "environment": [
                     "PYTHONUNBUFFERED=1",
+                    f"CLIENT_COUNT={cant_clientes}"
                 ],
                 "networks": ["testing_net"],
                 "volumes": [
