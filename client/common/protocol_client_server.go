@@ -2,6 +2,7 @@ package common
 
 import (
 	"net"
+	"encoding/binary"
 )
 
 const BET_MESSAGE_CODE = 1
@@ -11,6 +12,11 @@ const GET_WINNERS_MESSAGE_CODE = 4
 
 const CONFIRMATION_MESSAGE_SIZE = 1
 const READING_ERROR = 1
+
+const WINNERS_LIST_SIZE = 4
+const DOCUMENT_SIZE = 4
+
+const SUCCESS_RECEIVING_ALL_WINNERS = 0
 
 type ProtocolClient struct {
 	conn net.Conn
@@ -130,4 +136,119 @@ func (p *ProtocolClient) ReceiveConfirmation() (int, error) {
 	confirmation := int(data[0])
 	log.Debugf("action: receive_confirmation | result: success | confirmation: %v", confirmation)
 	return confirmation, nil
+}
+
+// SendEndOfBatchesCode sends the end of batches code to the server
+func (p *ProtocolClient) SendEndOfBatchesCode() error {
+	log.Debugf("action: sending_end_of_batches_code | result: in_progress")
+
+	code := serializeUint8(END_OF_BATCH_MESSAGE_CODE)
+	if code == nil {
+		log.Criticalf("action: sending_end_of_batches_code | result: fail | error: Not able to serialize as uint8")
+		return nil
+	}
+
+	err := SendAll(p.conn, code)
+	if err != nil {
+		log.Criticalf("action: sending_end_of_batches_code | result: fail | error: %v", err)
+		return err
+	}
+
+	log.Debugf("action: sending_end_of_batches_code | result: success")
+	return nil
+}
+
+// SendGetWinnersCode sends the get winners code to the server
+func (p *ProtocolClient) SendGetWinnersCode() error {
+	log.Debugf("action: sending_get_winners_code | result: in_progress")
+	code := serializeUint8(GET_WINNERS_MESSAGE_CODE)
+	if code == nil {
+		log.Criticalf("action: sending_get_winners_code | result: fail | error: Not able to serialize as uint8")
+		return nil
+	}
+
+	err := SendAll(p.conn, code)
+	if err != nil {
+		log.Criticalf("action: sending_get_winners_code | result: fail | error: %v", err)
+		return err
+	}
+
+	log.Debugf("action: sending_get_winners_code | result: success")
+	return nil
+}
+
+
+// SendAgencyNumber sends the agency number to the server
+func (p *ProtocolClient) SendAgencyNumber(agency int) error {
+	log.Debugf("action: sending_agency_number | result: in_progress")
+
+	agencyBytes := serializeUint32(agency)
+	if agencyBytes == nil {
+		log.Criticalf("action: sending_agency_number | result: fail | error: Not able to serialize as uint32")
+		return nil
+	}
+
+	err := SendAll(p.conn, agencyBytes)
+	if err != nil {
+		log.Criticalf("action: sending_agency_number | result: fail | error: %v", err)
+		return err
+	}
+
+	log.Debugf("action: sending_agency_number | result: success")
+	return nil
+}
+
+
+// ReceiveListOfWinnersSize receives the size of the list of winners from the server
+func (p *ProtocolClient) ReceiveListOfWinnersSize() (int, error) {
+	log.Debugf("action: receive_list_of_winners_size | result: in_progress")
+
+	data := make([]byte, WINNERS_LIST_SIZE)
+	err := ReceiveAll(p.conn, data)
+	if err != nil {
+		log.Criticalf("action: receive_list_of_winners_size | result: fail | error: %v", err)
+		return READING_ERROR, err
+	}
+
+	amountOfWinners := int(binary.BigEndian.Uint32(data))
+
+	log.Debugf("action: receive_list_of_winners_size | result: success | amountOfWinners: %v", amountOfWinners)
+	return amountOfWinners, nil
+}
+
+
+// ReceiveWinnerDocument receives a winner document from the server
+func (p *ProtocolClient) ReceiveWinnerDocument() (int, error) {
+	log.Debugf("action: receive_winner_document | result: in_progress")
+
+	data := make([]byte, DOCUMENT_SIZE)
+	err := ReceiveAll(p.conn, data)
+	if err != nil {
+		log.Criticalf("action: receive_winner_document | result: fail | error: %v", err)
+		return READING_ERROR, err
+	}
+
+	document := int(binary.BigEndian.Uint32(data))
+
+	log.Debugf("action: receive_winner_document | result: success | document: %v", document)
+	return document, nil
+}
+
+func (p *ProtocolClient) SendConfirmation() error {
+	log.Debugf("action: sending_confirmation | result: in_progress")
+
+	code := serializeUint8(SUCCESS_RECEIVING_ALL_WINNERS)
+	if code == nil {
+		log.Criticalf("action: sending_confirmation | result: fail | error: Not able to serialize as uint8")
+		return nil
+	}
+
+	err := SendAll(p.conn, code)
+	if err != nil {
+		log.Criticalf("action: sending_confirmation | result: fail | error: %v", err)
+		return err
+	}
+
+	log.Debugf("action: sending_confirmation | result: success")
+	return nil
 }

@@ -3,6 +3,7 @@ package common
 import (
 	"encoding/csv"
 	"os"
+	"strconv"
 )
 
 const BET_RECORD_LENGTH = 5
@@ -65,7 +66,7 @@ func ProcessBets(bets []Bet, protocol *ProtocolClient, batchMaxAmount int) {
 	
 
 	for i := 0; i < batches; i++ {
-		log.Infof("action: sending_batch | result: in_progress | batch: %v / %v", i, batches)
+		log.Debugf("action: sending_batch | result: in_progress | batch: %v / %v", i, batches)
 		betsOfThisBatch := GetBetsOfThisBatch(bets, i, batchMaxAmount)
 
 		err := protocol.SendBatch(betsOfThisBatch)
@@ -86,12 +87,12 @@ func ProcessBets(bets []Bet, protocol *ProtocolClient, batchMaxAmount int) {
 			log.Criticalf("action: batch_recibido | result: fail")
 		}
 
-		log.Infof("action: sending_batch | result: success | batch: %v / %v", i, batches)
+		log.Debugf("action: sending_batch | result: success | batch: %v / %v", i, batches)
 	}
 	
 	log.Infof("action: sending_all_batches | result: success")
 
-	// protocol.SendEndOfBatchesCode()
+	protocol.SendEndOfBatchesCode()
 }
 
 // CalulateBatchAmount calculates the number of batches needed to send all bets
@@ -111,4 +112,50 @@ func GetBetsOfThisBatch(bets []Bet, i int, batchMaxAmount int) []Bet {
 		end = len(bets)
 	}
 	return bets[start:end]
+}
+
+// GetWinners asks the server for the winners
+func GetWinners(protocol *ProtocolClient, agency string) {
+	log.Infof("action: consulta_ganadores | result: in_progress")
+
+	err := protocol.SendGetWinnersCode()
+	if err != nil {
+		log.Criticalf("action: consulta_ganadores | result: fail | error: %v", err)
+		return
+	}
+
+	agencyNumber, err := strconv.Atoi(agency)
+	if err != nil {
+		log.Criticalf("action: consulta_ganadores | result: fail | error: invalid agency number | error: %v", err)
+		return
+	}
+
+	err = protocol.SendAgencyNumber(agencyNumber)
+	if err != nil {
+		log.Criticalf("action: consulta_ganadores | result: fail | error: %v", err)
+		return
+	}
+
+	amountOfWinners, err := protocol.ReceiveListOfWinnersSize()
+	if err != nil {
+		log.Criticalf("action: consulta_ganadores | result: fail | error: %v", err)
+		return
+	}
+
+	for i := 0; i < amountOfWinners; i++ {
+		document, err := protocol.ReceiveWinnerDocument()
+		if err != nil {
+			log.Criticalf("action: consulta_ganadores | result: fail | error: %v", err)
+			return
+		}
+		log.Infof("action: ganador_obtenido | result: success | DNI_ganador: %v", document)
+	}
+
+	err = protocol.SendConfirmation()
+	if err != nil {
+		log.Criticalf("action: consulta_ganadores | result: fail | error: %v", err)
+		return
+	}
+
+	log.Infof("action: consulta_ganadores | result: success")
 }

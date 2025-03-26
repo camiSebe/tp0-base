@@ -58,12 +58,57 @@ class ProtocolServer:
         logging.debug(f"action: receive_bet | result: success | First Name: {first_name} | Last Name: {last_name} | Document: {document} | Birthdate: {birthdate} | Number: {number} | Agency: {agency}")
         return bet
     
-    def send_confirmation(self, bet_result):
+    def send_confirmation(self, bet_result : int):
         """
         Send a confirmation message to the client including the document and the number of the bet following the format:
         <0x00> if the bet was made successfully
         <0x01>" if the bet had a failure
         """
-        send(self._client_socket, bet_result)
+        send(self._client_socket, bet_result.to_bytes(SIZE_OF_UINT8, byteorder="big"))
         logging.debug(f"action: send_confirmation_message | result: success | message: {bet_result}")
     
+
+    def receive_agency_number(self) -> int:
+        """
+        Receives the agency number from the client
+        """
+        agency = receive_data(self._client_socket, SIZE_OF_UINT32)
+        deserialize_agency = int.from_bytes(agency, byteorder="big")
+        if deserialize_agency == "":
+            logging.error("action: receive_agency_number | result: fail | error: Agency number did not arrive correctly")
+            return None
+        logging.debug(f"action: receive_agency_number | result: success | agency: {deserialize_agency}")
+        return deserialize_agency
+
+    def send_winners_to_agency(self, winners: list[Bet], agency: int):
+        """
+        Send the winners to the client
+        """
+        winners_from_agency = [winner for winner in winners if winner.agency == agency]
+        self.send_list_of_winners_size(len(winners_from_agency))
+
+        for winner in winners_from_agency:
+            logging.info(f"action: send_winners_to_agency | result: in_progress | documento: {winner.document} | agencia: {winner.agency}")
+            send(self._client_socket, int(winner.document).to_bytes(SIZE_OF_UINT32, byteorder="big"))
+            logging.info(f"action: send_winners_to_agency | result: success | documento: {winner.document} | agencia: {winner.agency}")
+
+        
+    def send_list_of_winners_size(self, size: int):
+        """
+        Send the size of the list of winners to the client
+        """
+        send(self._client_socket, size.to_bytes(SIZE_OF_UINT32, byteorder="big"))
+        logging.info(f"action: send_list_of_winners_size | result: success | size: {size}")
+
+
+    def receive_confirmation(self) -> int:
+        """
+        Receives the confirmation message from the client
+        """
+        confirmation = receive_data(self._client_socket, SIZE_OF_UINT8)
+        deserialize_confirmation = int.from_bytes(confirmation, byteorder="big")
+        if deserialize_confirmation == "":
+            logging.error("action: receive_confirmation | result: fail | error: Confirmation message did not arrive correctly")
+            return None
+        logging.info(f"action: receive_confirmation | result: success | confirmation: {deserialize_confirmation}")
+        return deserialize_confirmation

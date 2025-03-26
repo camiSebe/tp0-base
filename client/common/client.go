@@ -59,7 +59,7 @@ func (c *Client) StartClientLoop() {
 
 	ProcessFileOfBets(protocol, c.config.ID, fmt.Sprintf(".data/agency-%s.csv", c.config.ID), c.config.BatchMaxAmount)
 
-	// c.GetWinners()
+	GetWinners(protocol, c.config.ID)
 
 	if c.conn != nil {
 		c.conn.Close()
