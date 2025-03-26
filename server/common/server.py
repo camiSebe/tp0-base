@@ -12,6 +12,13 @@ BET_FAILURE = 1
 BATCH_SUCCESS = 0
 BATCH_FAILURE = 1
 
+TOTAL_AGENCYS = 5
+
+NEW_BET_MESSAGE = 1
+NEW_BATCH_MESSAGE = 2
+END_OF_BATCHES = 3
+GET_WINNERS = 4
+
 class Server:
     def __init__(self, port, listen_backlog):
         # Initialize server socket
@@ -19,6 +26,7 @@ class Server:
         self._server_socket.bind(('', port))
         self._server_socket.listen(listen_backlog)
         self._was_closed = False
+        self._agencys_completed = 0
         signal.signal(signal.SIGTERM, self.stop_server)
 
     def run(self):
@@ -58,7 +66,26 @@ class Server:
         client socket will also be closed
         """
         try:
-            self.process_batch_of_bets(client_sock)
+            while True:
+                message_code = ProtocolServer(client_sock).receive_message_code()
+                logging.debug(f"action receive_message_code | result: success | message_code: {message_code}")
+
+                if message_code == NEW_BET_MESSAGE:
+                    self.process_bet(client_sock)
+
+                elif message_code == NEW_BATCH_MESSAGE:
+                    self.process_batch_of_bets(client_sock)
+
+                elif message_code == END_OF_BATCHES:
+                    self._log_info('receive_message_code', 'success', msg='End of batches received')
+                    break
+
+                elif message_code == GET_WINNERS:
+                    pass
+
+                else:
+                    self._log_error('receive_message_code', 'fail', error='Message code not recognized')
+
         except OSError as e:
             self._log_error('receive_message', 'fail', error=e)
         finally:
@@ -91,11 +118,9 @@ class Server:
                 new_bet = self.process_bet(client_sock)
                 if new_bet==None:
                     bets_failed += 1
-                    self._bets_controller.add_bet_failed()
                 else:
                     bets.append(new_bet)
                     bets_succeded += 1
-                    self._bets_controller.add_bet_received()
             store_bets(bets)
             if bets_failed > 0:
                 logging.info(f"action: apuesta_recibida | result: fail | cantidad: {bets_failed}")
