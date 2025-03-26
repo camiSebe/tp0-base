@@ -149,5 +149,5 @@ func GetWinners(protocol *ProtocolClient, agency string) {
 		log.Infof("action: ganador_obtenido | result: success | DNI_ganador: %v", document)
 	}
 
-	log.Infof("action: consulta_ganadores | result: success")
+	log.Infof("action: consulta_ganadores | result: success | cant_ganadores: %v", amountOfWinners)
 }
