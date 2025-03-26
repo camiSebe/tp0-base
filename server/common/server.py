@@ -78,7 +78,7 @@ class Server:
 
             while protocol_server._client_is_connected():
                 message_code = protocol_server.receive_message_code()
-                logging.debug(f"action receive_message_code | result: success | message_code: {message_code}")
+                # logging.debug(f"action receive_message_code | result: success | message_code: {message_code}")
 
                 if message_code == NEW_BET_MESSAGE:
                     self.process_bet(protocol_server)
@@ -125,7 +125,7 @@ class Server:
             self._log_error('receive_batch_size', 'fail', error='Batch size did not arrive correctly')
             protocol_server.send_confirmation(BATCH_FAILURE)
         else:
-            self._log_debug('receive_batch_size', 'success',msg=f"batch_size: {batch_size}")
+            # self._log_debug('receive_batch_size', 'success',msg=f"batch_size: {batch_size}")
             bets = []
             bets_failed = 0
             bets_succeded = 0
@@ -138,7 +138,7 @@ class Server:
                     bets_succeded += 1
             store_bets(bets)
             if bets_failed > 0:
-                logging.debug(f"action: apuesta_recibida | result: fail | cantidad: {bets_failed}")
+                # logging.debug(f"action: apuesta_recibida | result: fail | cantidad: {bets_failed}")
                 protocol_server.send_confirmation(BATCH_FAILURE)
             else:
                 logging.debug(f"action: apuesta_recibida | result: success | cantidad: {bets_succeded}")
@@ -151,7 +151,7 @@ class Server:
             self._log_error('receive_bet', 'fail', error='Bet did not arrive correctly')
             return None
         else:
-            self._log_debug('receive_bet', 'success', msg=bet.log_message())
+            # self._log_debug('receive_bet', 'success', msg=bet.log_message())
             return bet
 
     def process_winners(self):
