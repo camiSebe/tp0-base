@@ -30,7 +30,5 @@ def receive_string(client_socket: socket.socket) -> str:
     The string is encoded in UTF-8.
     """
     length = receive_len(client_socket)
-    logging.debug(f"action: receive_len | result: success | length: {length}")
     data = receive_data(client_socket, length)
-    logging.debug(f"action: receive_data | result: success | data: {data}")
     return data.decode("utf-8")

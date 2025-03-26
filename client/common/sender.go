@@ -15,6 +15,5 @@ func SendAll(conn net.Conn, data []byte) error {
 		}
 		total += n
 	}
-	log.Debugf("action: SendAll | result: success | Bytes sent: %v | Data: %v", total, data)
 	return nil
 }

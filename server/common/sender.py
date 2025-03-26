@@ -9,9 +9,7 @@ def send(sock: socket.socket, data: bytes) -> None:
     Handles socket errors if the connection is closed or broken.
     """
     try:
-        logging.debug(f"action: send | result: in_progress | value: {data}")
         sock.sendall(data)
-        logging.debug(f"action: send | result: success")
     except (BrokenPipeError, ConnectionResetError):
         logging.error("Connection closed by client")
     except socket.error as e:
