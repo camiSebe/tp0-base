@@ -91,8 +91,6 @@ func ProcessBets(bets []Bet, protocol *ProtocolClient, batchMaxAmount int) {
 	}
 	
 	log.Infof("action: sending_all_batches | result: success")
-
-	protocol.SendEndOfBatchesCode()
 }
 
 // CalulateBatchAmount calculates the number of batches needed to send all bets
@@ -149,12 +147,6 @@ func GetWinners(protocol *ProtocolClient, agency string) {
 			return
 		}
 		log.Infof("action: ganador_obtenido | result: success | DNI_ganador: %v", document)
-	}
-
-	err = protocol.SendConfirmation()
-	if err != nil {
-		log.Criticalf("action: consulta_ganadores | result: fail | error: %v", err)
-		return
 	}
 
 	log.Infof("action: consulta_ganadores | result: success")

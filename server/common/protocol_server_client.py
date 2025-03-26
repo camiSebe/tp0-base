@@ -11,6 +11,16 @@ SIZE_OF_UINT32 = 4
 class ProtocolServer:
     def __init__(self, client_socket: socket.socket):
         self._client_socket = client_socket
+        self._agency = 0
+
+    def set_agency(self, agency: int):
+        self._agency = agency
+
+    def _client_is_connected(self) -> bool:
+        """
+        Check if the client is connected
+        """
+        return self._client_socket is not None
 
     def receive_message_code(self) -> int:
         """
@@ -77,17 +87,18 @@ class ProtocolServer:
         if deserialize_agency == "":
             logging.error("action: receive_agency_number | result: fail | error: Agency number did not arrive correctly")
             return None
-        logging.debug(f"action: receive_agency_number | result: success | agency: {deserialize_agency}")
+        logging.info(f"action: receive_agency_number | result: success | agency: {deserialize_agency}")
+
+        self.set_agency(deserialize_agency)
         return deserialize_agency
 
-    def send_winners_to_agency(self, winners: list[Bet], agency: int):
+    def send_winners_to_agency(self, winners: list[Bet]):
         """
         Send the winners to the client
         """
-        winners_from_agency = [winner for winner in winners if winner.agency == agency]
-        self.send_list_of_winners_size(len(winners_from_agency))
+        self.send_list_of_winners_size(len(winners))
 
-        for winner in winners_from_agency:
+        for winner in winners:
             logging.info(f"action: send_winners_to_agency | result: in_progress | documento: {winner.document} | agencia: {winner.agency}")
             send(self._client_socket, int(winner.document).to_bytes(SIZE_OF_UINT32, byteorder="big"))
             logging.info(f"action: send_winners_to_agency | result: success | documento: {winner.document} | agencia: {winner.agency}")

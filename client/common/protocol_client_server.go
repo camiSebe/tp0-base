@@ -233,22 +233,3 @@ func (p *ProtocolClient) ReceiveWinnerDocument() (int, error) {
 	log.Debugf("action: receive_winner_document | result: success | document: %v", document)
 	return document, nil
 }
-
-func (p *ProtocolClient) SendConfirmation() error {
-	log.Debugf("action: sending_confirmation | result: in_progress")
-
-	code := serializeUint8(SUCCESS_RECEIVING_ALL_WINNERS)
-	if code == nil {
-		log.Criticalf("action: sending_confirmation | result: fail | error: Not able to serialize as uint8")
-		return nil
-	}
-
-	err := SendAll(p.conn, code)
-	if err != nil {
-		log.Criticalf("action: sending_confirmation | result: fail | error: %v", err)
-		return err
-	}
-
-	log.Debugf("action: sending_confirmation | result: success")
-	return nil
-}
