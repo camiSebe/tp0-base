@@ -10,7 +10,9 @@ class Server:
         self._server_socket.bind(('', port))
         self._server_socket.listen(listen_backlog)
         self._was_closed = False
+
         signal.signal(signal.SIGTERM, self.stop_server)
+        signal.signal(signal.SIGINT, self.stop_server)
 
     def run(self):
         """
