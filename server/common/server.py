@@ -17,7 +17,7 @@ BATCH_FAILURE = 1
 
 NEW_BET_MESSAGE = 1
 NEW_BATCH_MESSAGE = 2
-END_OF_BATCHES = 3
+# END_OF_BATCHES = 3
 GET_WINNERS = 4
 
 SUCCESS_SENDING_WINNERS = 0
@@ -132,10 +132,8 @@ class Server:
 
         with self._clients_conected_lock:
             self._log_info('CLIENTS CONNECTED LOCK in stop_server', 'in_progress')
-            self._log_info('close_all_clients', 'in_progress')
-            for client in self._clients_conected:
-                client.close()
-            self._clients_conected = []
+            
+            self._close_all_clients_connection()
             self._log_info('close_all_clients', 'success')
         self._log_info('CLIENTS CONNECTED LOCK in stop_server', 'success')
 
@@ -181,6 +179,9 @@ class Server:
             return bet
 
     def process_winners(self):
+        """
+        Process all the winners in the current bets and send them to the corresponding agencies
+        """
         try:
             self._log_info('sorteo', 'success')
 
@@ -199,13 +200,14 @@ class Server:
         finally:
             with self._clients_conected_lock:
                 self._log_info('CLIENTS CONNECTED LOCK in process_winners', 'in_progress')
-                for client in self._clients_conected:
-                    client.close()
-                self._clients_conected = []
+                self._close_all_clients_connection()
             self._log_info('CLIENTS CONNECTED LOCK in process_winners', 'success')
 
 
     def get_winners(self) -> list[Bet]:
+        """
+        Returns a list of all the winners in the current bets
+        """
         # all_bets = load_bets()
         with self._storage_lock:
             self._log_info('STORAGE LOCK in get_winners for load_bets', 'in_progress')
@@ -220,6 +222,16 @@ class Server:
         logging.debug(f"action: checking_winners | result: success | winners: {len(winners)}")
         return winners
 
+    def _close_all_clients_connection(self):
+        """
+        Closes all client connections in the server
+        """
+        self._log_info('close_all_clients', 'in_progress')
+        for client in self._clients_conected:
+            client.close()
+        self._clients_conected.clear()
+        self._log_info('close_all_clients', 'success')
+ 
     ### Logging helper functions
     def _log_info(self, action, result, ip=None, msg=None):
         """
