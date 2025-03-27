@@ -53,14 +53,14 @@ func (c *Client) createClientSocket() error {
 
 
 // makeBet Sends a bet to the server and receives confirmation
-func (c *Client) makeBet(msgID int) {
-	if err := c.SendBet(msgID, c.bet); err != nil {
+func (c *Client) makeBet(p *ProtocolClient, msgID int) {
+	if err := p.SendBet(c.config.ID, msgID, c.bet); err != nil {
 		log.Criticalf("action: send_bet | result: fail | client_id: %v | msg_id: %v | error: %v", c.config.ID, msgID, err)
 		c.conn.Close()
 		return
 	}
 
-	confirmation, err := c.ReceiveConfirmation()
+	confirmation, err := p.ReceiveConfirmation(c.config.ID)
 	if err != nil {
 		log.Criticalf("action: receive_confirmation | result: fail | client_id: %v | msg_id: %v | error: %v", c.config.ID, msgID, err)
 		c.conn.Close()
@@ -83,7 +83,9 @@ func (c *Client) StartClientLoop() {
 		// Create the connection the server in every loop iteration. Send an
 		c.createClientSocket()
 
-		c.makeBet(msgID)
+		protocol := NewProtocolClient(c.conn)
+
+		c.makeBet(protocol, msgID)
 
 		c.conn.Close()
 
