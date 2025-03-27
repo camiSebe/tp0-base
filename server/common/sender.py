@@ -3,16 +3,16 @@ import logging
 
 LENGTH_CONFIRMATION_MESSAGE = 1
 
-def send(sock: socket.socket, result: int) -> None:
+def send(sock: socket.socket, data: bytes) -> None:
     """
-    Sends the confirmation message to the client as a byte.
+    Sends the data to the client
     Handles socket errors if the connection is closed or broken.
     """
     try:
-        logging.debug(f"action: send | result: in_progress")
-        sock.sendall(result.to_bytes(LENGTH_CONFIRMATION_MESSAGE, byteorder="big"))
-        logging.debug(f"action: send | result: success")
+        # logging.debug(f"action: send | result: in_progress | data: {data}")
+        sock.sendall(data)
+        # logging.debug(f"action: send | result: in_progress")
     except (BrokenPipeError, ConnectionResetError):
         logging.error("Connection closed by client")
     except socket.error as e:
-        logging.error("Socket error")
+        logging.error(f"Socket error: {e}")
