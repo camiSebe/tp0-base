@@ -27,7 +27,3 @@ Cada cliente se encarga de:
     4) Esperar la confirmación del server de que el batch se guardó correctamente
 
 El server por su parte, recibe primero el size del batch, luego todos los bets de dentro del batch, y repite este proceso hasta que el cliente deja de enviar batches.
-
-#### Estado de los tests
-
-Por ahora este codigo no pasa las pruebas `test_bet_amount_A` y `test_bet_amount_B`. Deje un [comentario en el campus](https://campusgrado.fi.uba.ar/mod/forum/discuss.php?d=29858) preguntando qué es lo que sucede, porque no encontré la falla hasta el momento.
