@@ -61,9 +61,6 @@ func (c *Client) StartClientLoop() {
 
 	GetWinners(protocol, c.config.ID)
 
-	// Sleep for the tests
-	time.Sleep(50 * time.Second)
-
 	if c.conn != nil {
 		c.conn.Close()
 	}
