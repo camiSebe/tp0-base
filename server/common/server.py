@@ -2,6 +2,9 @@ import socket
 import logging
 
 import signal
+import threading
+
+from concurrent.futures import ThreadPoolExecutor
 
 from common.protocol_server_client import ProtocolServer
 from common.utils import has_won, load_bets, store_bets, Bet
@@ -30,6 +33,10 @@ class Server:
         self._agencys_completed = 0
         self._total_agencies = clients_count
 
+        self._clients_conected_lock = threading.Lock()
+        self._agencys_completed_lock = threading.Lock()
+        self._storage_lock = threading.Lock()
+
         signal.signal(signal.SIGTERM, self.stop_server)
         signal.signal(signal.SIGINT, self.stop_server)
 
@@ -41,15 +48,16 @@ class Server:
         communication with a client. After client with communucation
         finishes, servers starts to accept new connections again
         """
-        while not self._was_closed:
-            try:
-                client_sock = self.__accept_new_connection()
-                self.__handle_client_connection(client_sock)
-            except OSError as e:
-                if self._was_closed:
-                    break
-                self._log_error('accept_connections', 'fail', error=e)
-                break
+        with ThreadPoolExecutor() as executor:
+            while not self._was_closed:
+                try:
+                    client_sock = self.__accept_new_connection()
+                    executor.submit(self.__handle_client_connection, client_sock)
+                    # self.__handle_client_connection(client_sock)
+                except OSError as e:
+                    if self._was_closed:
+                        break
+                    self._log_error('accept_connections', 'fail', error=e)
 
     def __accept_new_connection(self):
         """
@@ -61,7 +69,12 @@ class Server:
         # Connection arrived
         self._log_info('accept_connections', 'in_progress')
         c, addr = self._server_socket.accept()
-        self._clients_conected.append(c)
+
+        with self._clients_conected_lock:
+            self._log_info('CLIENTS CONNECTED LOCK in __accept_new_connection', 'in_progress')
+            self._clients_conected.append(c)
+        self._log_info('CLIENTS CONNECTED LOCK in __accept_new_connection', 'success')
+        
         self._log_info('accept_connections', 'success', addr[0])
         return c
 
@@ -78,7 +91,7 @@ class Server:
 
             while protocol_server._client_is_connected():
                 message_code = protocol_server.receive_message_code()
-                # logging.debug(f"action receive_message_code | result: success | message_code: {message_code}")
+                logging.debug(f"action receive_message_code | result: success | message_code: {message_code}")
 
                 if message_code == NEW_BET_MESSAGE:
                     self.process_bet(protocol_server)
@@ -87,7 +100,8 @@ class Server:
                     self.process_batch_of_bets(protocol_server)
 
                 elif message_code == GET_WINNERS:
-                    self._agencys_completed += 1
+                    with self._agencys_completed_lock:
+                        self._agencys_completed += 1
                     self._log_info('receive_message_code', 'success', msg='Get winners received')
                     
                     self._log_info('waiting_for_all_end_of_batches', 'in_progress', msg=f"agencies_completed: {self._agencys_completed} | total_agencies: {self._total_agencies}")
@@ -115,9 +129,15 @@ class Server:
         self._log_info('stop_server', 'success')
         self._server_socket.close()
         self._was_closed = True
-        for client in self._clients_conected:
-            client.close()
-        self._clients_conected = []
+
+        with self._clients_conected_lock:
+            self._log_info('CLIENTS CONNECTED LOCK in stop_server', 'in_progress')
+            self._log_info('close_all_clients', 'in_progress')
+            for client in self._clients_conected:
+                client.close()
+            self._clients_conected = []
+            self._log_info('close_all_clients', 'success')
+        self._log_info('CLIENTS CONNECTED LOCK in stop_server', 'success')
 
     def process_batch_of_bets(self, protocol_server: ProtocolServer):
         batch_size = protocol_server.receive_batch_size()
@@ -125,7 +145,7 @@ class Server:
             self._log_error('receive_batch_size', 'fail', error='Batch size did not arrive correctly')
             protocol_server.send_confirmation(BATCH_FAILURE)
         else:
-            # self._log_debug('receive_batch_size', 'success',msg=f"batch_size: {batch_size}")
+            self._log_debug('receive_batch_size', 'success',msg=f"batch_size: {batch_size}")
             bets = []
             bets_failed = 0
             bets_succeded = 0
@@ -136,7 +156,13 @@ class Server:
                 else:
                     bets.append(new_bet)
                     bets_succeded += 1
-            store_bets(bets)
+            
+            # store_bets(bets)
+            with self._storage_lock:
+                self._log_info('STORAGE LOCK in process_batch_of_bets', 'in_progress')
+                store_bets(bets)
+            self._log_info('STORAGE LOCK in process_batch_of_bets', 'success')
+
             if bets_failed > 0:
                 # logging.debug(f"action: apuesta_recibida | result: fail | cantidad: {bets_failed}")
                 protocol_server.send_confirmation(BATCH_FAILURE)
@@ -171,13 +197,21 @@ class Server:
                 protocol_server.send_winners_to_agency(winners_from_this_agency)
         
         finally:
-            for client in self._clients_conected:
-                client.close()
-            self._clients_conected = []
+            with self._clients_conected_lock:
+                self._log_info('CLIENTS CONNECTED LOCK in process_winners', 'in_progress')
+                for client in self._clients_conected:
+                    client.close()
+                self._clients_conected = []
+            self._log_info('CLIENTS CONNECTED LOCK in process_winners', 'success')
 
 
     def get_winners(self) -> list[Bet]:
-        all_bets = load_bets()
+        # all_bets = load_bets()
+        with self._storage_lock:
+            self._log_info('STORAGE LOCK in get_winners for load_bets', 'in_progress')
+            all_bets = load_bets()
+        self._log_info('STORAGE LOCK in get_winners for load_bets', 'success')
+
         winners = []
         logging.debug(f"action: checking_winners | result: in_progress")
         for bet in all_bets:
