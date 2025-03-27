@@ -6,6 +6,8 @@ import (
 	"strconv"
 )
 
+const MAX_BATCH_AMOUNT_FOR_PROTOCOL = 100
+
 const BET_RECORD_LENGTH = 5
 const BATCH_SUCCESS = 0
 
@@ -95,6 +97,9 @@ func ProcessBets(bets []Bet, protocol *ProtocolClient, batchMaxAmount int) {
 
 // CalulateBatchAmount calculates the number of batches needed to send all bets
 func CalulateBatchAmount(betsAmount int, batchMaxAmount int) int {
+	if batchMaxAmount > MAX_BATCH_AMOUNT_FOR_PROTOCOL {
+		batchMaxAmount = MAX_BATCH_AMOUNT_FOR_PROTOCOL
+	}
 	batches := betsAmount / batchMaxAmount
 	if betsAmount%batchMaxAmount != 0 {
 		batches++
