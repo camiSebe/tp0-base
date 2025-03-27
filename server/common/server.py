@@ -14,7 +14,7 @@ BATCH_FAILURE = 1
 
 NEW_BET_MESSAGE = 1
 NEW_BATCH_MESSAGE = 2
-END_OF_BATCHES = 3
+# END_OF_BATCHES = 3
 GET_WINNERS = 4
 
 SUCCESS_SENDING_WINNERS = 0
@@ -49,7 +49,6 @@ class Server:
                 if self._was_closed:
                     break
                 self._log_error('accept_connections', 'fail', error=e)
-                break
 
     def __accept_new_connection(self):
         """
@@ -115,9 +114,7 @@ class Server:
         self._log_info('stop_server', 'success')
         self._server_socket.close()
         self._was_closed = True
-        for client in self._clients_conected:
-            client.close()
-        self._clients_conected = []
+        self._close_all_clients_connection()
 
     def process_batch_of_bets(self, protocol_server: ProtocolServer):
         batch_size = protocol_server.receive_batch_size()
@@ -171,9 +168,7 @@ class Server:
                 protocol_server.send_winners_to_agency(winners_from_this_agency)
         
         finally:
-            for client in self._clients_conected:
-                client.close()
-            self._clients_conected = []
+            self._close_all_clients_connection()
 
 
     def get_winners(self) -> list[Bet]:
@@ -185,6 +180,14 @@ class Server:
                 winners.append(bet)
         logging.debug(f"action: checking_winners | result: success | winners: {len(winners)}")
         return winners
+
+    def _close_all_clients_connection(self):
+        """
+        Close client connection
+        """
+        for client in self._clients_conected:
+            client.close()
+        self._clients_conected.clear()
 
     ### Logging helper functions
     def _log_info(self, action, result, ip=None, msg=None):
