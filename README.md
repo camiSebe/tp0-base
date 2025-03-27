@@ -199,3 +199,7 @@ Si configuramos batchMaxAmount = 100 apuestas por batch: 60 bytes * 100 = 6.0 kB
 Ahora, Si batchMaxAmount = 150: 60 bytes * 150 = 9.0 kB > Supera los 8 kB
 
 Asi que podemos tomar un valor alrededor de 100 y no habría problema, en principio. Hay que recordar que como tenemos datos variables, si llegaramos a tener un batch con nombre y apellidos muy largos, podríamos pasarnos. Yo elegí 100 para tener margen de error.
+
+### Diagrama de secuencia general del TP
+
+![Diagrama de secuencia hecho con PlantUML](diagrama_de_secuencia.png)
