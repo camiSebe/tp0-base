@@ -22,6 +22,62 @@ A priori, tengo las siguientes secciones críticas:
 
 Por otra parte, ya la cátedra nos avisa que las funciones `def has_won(bet: Bet) -> bool:` , `def store_bets(bets: list[Bet]) -> None:` y `def load_bets() -> list[Bet]:` no son thread-safe. Esto quiere decir que debo de encargarme desde el lado del servidor de asegurarme que dos hilos no quieran utilizar estas funciones porque pueden quedar en un estado corrompido/inválido.
 
+#### Solución propuesta
+
+##### Uso de multithreading y análisis del GIL
+
+Para el servidor use Threads a través del `ThreadPoolExecutor` para manejar múltiples clientse al mismo tiempo. A pesar de la limitación del Global Interpreter LOck (GIL), este planteo es válido porque como este servidor está basado en I/O, los hilos pueden seguir aceptando conexiones y procesando mensajes mientras esperan operaciones de red (recibir o enviar datos).
+
+##### Aceptación de clientes en paralelo
+
+El servidor usa `ThreadPoolExecutor` para manejar múltiples clientes simultáneamente. En el método `run()`, cuando un cliente se conecta, se usa `executor.submit(self.__handle_client_connection, client_sock)`, lo que delega la comunicación con ese cliente a un hilo diferente, permitiendo que el servidor siga aceptando nuevas conexiones sin bloquearse.
+
+###### Funcionamiento del `ThreadPoolExecutor`
+
+```python
+with ThreadPoolExecutor(max_workers=self._max_workers) as executor:
+    while not self._was_closed:
+        try:
+            client_sock = self.__accept_new_connection()
+            executor.submit(self.__handle_client_connection, client_sock)
+        except OSError as e:
+            if self._was_closed:
+                break
+```
+
+Usé `ThreadPoolExecutor` porque el Pool gestiona automáticamente la concurrencia, evitando crear y destruir threads innecesariamente. El `executor.submit(self.__handle_client_connection, client_sock)` ejecuta la función `self.__handle_client_connection` en thread del pool. Cuando with termina, `ThreadPoolExecutor` espera a que todos los threads finalicen antes de cerrar el pool.
+
+Obs: Le asigné un número de `max_workers` de 10, pero podría ser modificado tranquilamente. La realidad es que como solo tenemos 5 clientes máximo, en prncipio daría lo mismo.
+
+##### Procesamiento concurrente de Mensajes
+
+Una vez que un cliente está conectado, el método `__handle_client_connection()` entra en un bucle donde:
+
+1. Recibe un mensaje (`receive_message_code`)
+
+2. Decide qué hacer según el código del mensaje
+
+3. Procesa la solicitud en el mismo hilo del cliente
+
+Dado que cada cliente se maneja en un hilo separado, varias agencias pueden enviar bets (o batch de bets) al mismo tiempo.
+
+##### Sincronización con Locks
+
+Se usn locks para evitar problemas de concurrencia cuando varios hilos intentan modificar recursos compartidos como:
+
+- Lista de clientes conectados (`self._clients_conected`) -> Se protege mediante el lock `_clients_conected_lock`
+- Contador de agencias completadas (`self._agencys_completed`) -> Se protege mediante el lock `_agencys_completed_lock`
+- Acceso al almacenamiento de bets (`store_bets()` y `load_bets()`)  -> Se protege mediante el lock `_storage_lock`
+
+Ejemplo en `process_batch_of_bets()`:
+
+```python
+with self._storage_lock:
+    store_bets(bets)
+```
+
+Esto garantiza que solo un hilo acceda a store_bets() a la vez, evitando corrupción de datos.
+
 ## Comentarios generales sobre el TP
 
 ### Modificaciones a lo largo de las ramas

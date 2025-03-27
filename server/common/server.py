@@ -5,6 +5,7 @@ import signal
 import threading
 
 from concurrent.futures import ThreadPoolExecutor
+MAX_WORKERS = 10
 
 from common.protocol_server_client import ProtocolServer
 from common.utils import has_won, load_bets, store_bets, Bet
@@ -36,6 +37,7 @@ class Server:
         self._clients_conected_lock = threading.Lock()
         self._agencys_completed_lock = threading.Lock()
         self._storage_lock = threading.Lock()
+        self._max_workers = MAX_WORKERS
 
         signal.signal(signal.SIGTERM, self.stop_server)
         signal.signal(signal.SIGINT, self.stop_server)
@@ -48,7 +50,7 @@ class Server:
         communication with a client. After client with communucation
         finishes, servers starts to accept new connections again
         """
-        with ThreadPoolExecutor() as executor:
+        with ThreadPoolExecutor(max_workers=self._max_workers) as executor:
             while not self._was_closed:
                 try:
                     client_sock = self.__accept_new_connection()
