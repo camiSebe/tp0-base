@@ -83,7 +83,7 @@ Esto garantiza que solo un hilo acceda a store_bets() a la vez, evitando corrupc
 ### Modificaciones a lo largo de las ramas
 
 1. Me di cuenta durante el desarrollo del ej 7 que solo habia puesto el signal en el server para el SIGTERM y no el SIGINT, asi que fui y lo agregué en las distintas ramas.
-2. Tanto el protocolo del servidor como el del cliente sufrieron cambios a lo largo del TP. Cuando hice el primer modelo durante el ejercicio 5, rápido me di cuenta que no escalaba muy bien. Asi que tuve que ir agregándole partes, como el `message_code` que se ve a partir de la rama 7.
+2. Tanto el protocolo del servidor como el del cliente sufrieron cambios a lo largo del TP. Cuando hice el primer modelo durante el ejercicio 5, rápido me di cuenta que no escalaba muy bien. Asi que tuve que ir agregándole partes, como el `message_code` que se ve a partir de la rama 6.
 3. En la misma línea que el comentario anterior, los Send y Receive se modificaron para que fueran ágnosticos al tamaño que se le pasaran y directamente enviaran el largo de la data que se le pasaba. También aplica al serializador que me di cuenta que era innecesario tener un tipo de dato `bet_serializado` sino que era mas facil tener las funciones para serializar cada dato y enviarlos directamente.
 
 ### Comandos
@@ -93,6 +93,8 @@ Esto garantiza que solo un hilo acceda a store_bets() a la vez, evitando corrupc
 - Para levantar, ejecutar y detener los dockers siguen siendo los mismos comandos dados por la cátedra: `make docker-compose-up`, `make docker-compose-logs`, `make docker-compose-down`
 
 - Si se quiere cortar la ejecución de alguno de los contenedores, se debe tener una consola aparte de la que esta corriendo el contenedor y corer: `docker kill --signal=SIGTERM <nombre_del_contenedor_a_detener>`. Por ejemplo, si quisieramos detener el server haríamos: `docker kill --signal=SIGTERM server`
+
+OBS: El validador del echo server solo sirve en la rama 3 porque después se fue modificando el servidor y, obviamente, ya no se más un echo-server. Pero si se quiere correr, se va hasta la rama 3 y se ejecuta con `./validar-echo-server.sh`
 
 ### Protocolo
 
@@ -150,9 +152,10 @@ Cuando el cliente solicita la lista de ganadores, el servidor responde con:
 #### Ejemplo de Comunicación
 
 ```plaintext
-1. Cliente → Servidor: Enviar inicio de lote (`START_OF_BATCH_MESSAGE_CODE`).
-2. Cliente → Servidor: Enviar tamaño del lote (`uint32`).
-3. Cliente → Servidor: Enviar apuestas (`BET_MESSAGE_CODE` + datos).
+1. Cliente → Servidor: Enviar inicio de batch (`START_OF_BATCH_MESSAGE_CODE`).
+2. Cliente → Servidor: Enviar tamaño del batch (`uint32`).
+3. Cliente → Servidor: Enviar apuestas:
+      4. Cliente → Servidor: Enviar tamaño del campo (`uint32`) y luego el campo encodeado (`[]bytes`)
 5. Servidor → Cliente: Confirmación de recepción (`uint8`).
 6. Cliente → Servidor: Solicitar lista de ganadores (`GET_WINNERS_MESSAGE_CODE`).
 7. Servidor → Cliente: Enviar cantidad de ganadores (`uint32`).
@@ -161,7 +164,7 @@ Cuando el cliente solicita la lista de ganadores, el servidor responde con:
 
 ### Max Batch Amount
 
-En el ejercicio 5 pedían que pusieramos un max batch amount que no superara los 8 kB. Para estimar este valor lo que hice fue, usar para estimar el dato de ese ejercicio (NOMBRE="Santiago Lionel" APELLIDO="Lorca" DOCUMENTO="30904465" NACIMIENTO="1999-03-17" NUMERO="7574" AGENCIA="0"):
+En el ejercicio 6 pedían que pusieramos un max batch amount que no superara los 8 kB. Para estimar este valor lo que hice fue, usar para estimar el dato de ese ejercicio (NOMBRE="Santiago Lionel" APELLIDO="Lorca" DOCUMENTO="30904465" NACIMIENTO="1999-03-17" NUMERO="7574" AGENCIA="0"):
 
 Cálculo del tamaño de una apuesta:
 
@@ -195,4 +198,4 @@ Si configuramos batchMaxAmount = 100 apuestas por batch: 60 bytes * 100 = 6.0 kB
 
 Ahora, Si batchMaxAmount = 150: 60 bytes * 150 = 9.0 kB > Supera los 8 kB
 
-Asi que podemos tomar un valor alrededor de 100 y no habría problema, en principio. Hay que recordar que como tenemos datos variables, si llegaramos a tener un batch con nombre y apellidos muy largos, podríamos pasarnos. (En particular yo le puse 50 pero mas que nada para hacer batchs más chicos y poder hacerles seguimiento con los prints)
+Asi que podemos tomar un valor alrededor de 100 y no habría problema, en principio. Hay que recordar que como tenemos datos variables, si llegaramos a tener un batch con nombre y apellidos muy largos, podríamos pasarnos. Yo elegí 100 para tener margen de error.
