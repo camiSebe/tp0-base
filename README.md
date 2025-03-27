@@ -102,3 +102,41 @@ Cuando el cliente solicita la lista de ganadores, el servidor responde con:
 7. Servidor → Cliente: Enviar cantidad de ganadores (`uint32`).
 8. Servidor → Cliente: Enviar documentos de ganadores (`uint32` por cada ganador).
 ```
+
+### Max Batch Amount
+
+En el ejercicio 5 pedían que pusieramos un max batch amount que no superara los 8 kB. Para estimar este valor lo que hice fue, usar para estimar el dato de ese ejercicio (NOMBRE="Santiago Lionel" APELLIDO="Lorca" DOCUMENTO="30904465" NACIMIENTO="1999-03-17" NUMERO="7574" AGENCIA="0"):
+
+Cálculo del tamaño de una apuesta:
+
+- Cada apuesta contiene los siguientes datos:
+  - Bet_message_code (omitido en batch) → 0 bytes
+  - size_first_name → 4 bytes
+  - first_name → longitud variable
+  - size_last_name → 4 bytes
+  - last_name → longitud variable
+  - size_document → 4 bytes
+  - document → longitud variable
+  - size_birthdate → 4 bytes
+  - birthdate (YYYY-MM-DD, siempre 10 bytes)
+  - size_agency → 4 bytes
+  - agency → longitud variable
+
+Entonces, los campos de tamaño fijo suman: 4 + 4 + 4 + 4 + 10 + 4 = 30 bytes
+
+Asumiendo como valores promedio para los campos variables:
+
+- Nombre: Santiago Lionel → 16 bytes
+- Apellido: Lorca → 5 bytes
+- Documento: 30904465 → 8 bytes
+- Agencia: 1 → 1 bytes
+
+Entones, los campos de tamaño variable suman: 16 + 5 + 8 + 1 = 30
+
+Entonces, en total, una apuesta ocuparía: 30 + 30 = 60 bytes
+
+Si configuramos batchMaxAmount = 100 apuestas por batch: 60 bytes * 100 = 6.0 kB < 8 kB
+
+Ahora, Si batchMaxAmount = 150: 60 bytes * 150 = 9.0 kB > Supera los 8 kB
+
+Asi que podemos tomar un valor alrededor de 100 y no habría problema, en principio. Hay que recordar que como tenemos datos variables, si llegaramos a tener un batch con nombre y apellidos muy largos, podríamos pasarnos. (En particular yo le puse 50 pero mas que nada para hacer batchs más chicos y poder hacerles seguimiento con los prints)
