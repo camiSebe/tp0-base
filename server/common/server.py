@@ -71,7 +71,7 @@ class Server:
         c, addr = self._server_socket.accept()
 
         with self._clients_conected_lock:
-            self._log_info('CLIENTS CONNECTED LOCK in __accept_new_connection', 'in_progress')
+            self._log_info('CLIENTS CONNECTED LOCK in __accept_new_connection', 'in_progress', msg='Adding new client')
             self._clients_conected.append(c)
         self._log_info('CLIENTS CONNECTED LOCK in __accept_new_connection', 'success')
         
@@ -101,14 +101,19 @@ class Server:
 
                 elif message_code == GET_WINNERS:
                     with self._agencys_completed_lock:
+                        self._log_info('AGENCIES COMPLETED LOCK in message_code == GET_WINNERS', 'in_progress', msg='Adding 1 to agencies_completed')
                         self._agencys_completed += 1
-                    self._log_info('receive_message_code', 'success', msg='Get winners received')
+                    self._log_info('AGENCIES COMPLETED LOCK in message_code == GET_WINNERS', 'success')
+                    # self._log_info('receive_message_code', 'success', msg='Get winners received')
                     
                     self._log_info('waiting_for_all_end_of_batches', 'in_progress', msg=f"agencies_completed: {self._agencys_completed} | total_agencies: {self._total_agencies}")
 
-                    if self._agencys_completed == self._total_agencies:
-                        self._log_debug('waiting_for_all_end_of_batches', 'success')
-                        self.process_winners()
+                    with self._agencys_completed_lock:
+                        self._log_info('AGENCIES COMPLETED LOCK in message_code == GET_WINNERS', 'in_progress', msg='Checking if all agencies have completed')
+                        if self._agencys_completed == self._total_agencies:
+                            self._log_debug('waiting_for_all_end_of_batches', 'success')
+                            self.process_winners()
+                        self._log_info('AGENCIES COMPLETED LOCK in message_code == GET_WINNERS', 'success')
                     break
                     
                 else:
@@ -131,8 +136,7 @@ class Server:
         self._was_closed = True
 
         with self._clients_conected_lock:
-            self._log_info('CLIENTS CONNECTED LOCK in stop_server', 'in_progress')
-            
+            self._log_info('CLIENTS CONNECTED LOCK in stop_server', 'in_progress', msg='Closing all clients connections')
             self._close_all_clients_connection()
             self._log_info('close_all_clients', 'success')
         self._log_info('CLIENTS CONNECTED LOCK in stop_server', 'success')
@@ -157,9 +161,9 @@ class Server:
             
             # store_bets(bets)
             with self._storage_lock:
-                self._log_info('STORAGE LOCK in process_batch_of_bets', 'in_progress')
+                self._log_debug('STORAGE LOCK in process_batch_of_bets', 'in_progress', msg=f"Storing {len(bets)} bets")
                 store_bets(bets)
-            self._log_info('STORAGE LOCK in process_batch_of_bets', 'success')
+            self._log_debug('STORAGE LOCK in process_batch_of_bets', 'success')
 
             if bets_failed > 0:
                 # logging.debug(f"action: apuesta_recibida | result: fail | cantidad: {bets_failed}")
@@ -199,7 +203,7 @@ class Server:
         
         finally:
             with self._clients_conected_lock:
-                self._log_info('CLIENTS CONNECTED LOCK in process_winners', 'in_progress')
+                self._log_info('CLIENTS CONNECTED LOCK in process_winners', 'in_progress', msg='Closing all clients connections')
                 self._close_all_clients_connection()
             self._log_info('CLIENTS CONNECTED LOCK in process_winners', 'success')
 
@@ -210,7 +214,7 @@ class Server:
         """
         # all_bets = load_bets()
         with self._storage_lock:
-            self._log_info('STORAGE LOCK in get_winners for load_bets', 'in_progress')
+            self._log_info('STORAGE LOCK in get_winners for load_bets', 'in_progress', msg='Loading all bets')
             all_bets = load_bets()
         self._log_info('STORAGE LOCK in get_winners for load_bets', 'success')
 
