@@ -67,6 +67,6 @@ Entonces, en total, una apuesta ocuparía: 30 + 30 = 60 bytes
 
 Si configuramos batchMaxAmount = 100 apuestas por batch: 60 bytes * 100 = 6.0 kB < 8 kB
 
-Ahora, Si batchMaxAmount = 150: 60 bytes * 150 = 9.0 kB > Supera los 8 kB
+Ahora, Si batchMaxAmount = 150: 60 bytes * 150 = 9.0 kB > 8 kB
 
-Asi que podemos tomar un valor alrededor de 100 y no habría problema, en principio. Hay que recordar que como tenemos datos variables, si llegaramos a tener un batch con nombre y apellidos muy largos, podríamos pasarnos. Por lo tanto, yo elegi un batch de 50 para tener bastante margen de error.
+Asi que podemos tomar un valor alrededor de 100 y no habría problema, en principio. Hay que recordar que como tenemos datos variables, si llegaramos a tener un batch con nombre y apellidos muy largos, podríamos pasarnos. Por lo tanto, yo elegi un batch de 100 para tener bastante margen de error.
