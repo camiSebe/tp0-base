@@ -1,6 +1,8 @@
 # TP0: Docker + Comunicaciones + Concurrencia
 
-## Parte 2: Repaso de Comunicaciones
+## Parte 3: Repaso de Concurrencia
+
+En este ejercicio es importante considerar los mecanismos de sincronización a utilizar para el correcto funcionamiento de la persistencia.
 
 ### Ejercicio N°8
 
@@ -19,3 +21,84 @@ A priori, tengo las siguientes secciones críticas:
 2. El contador de agencias completadas: La idea es la misma que en el anterior, una agencia puede que quiera agregarse como completada, al mismo tiempo que estoy consultado si ya todas terminaron para empezar el sorteo.
 
 Por otra parte, ya la cátedra nos avisa que las funciones `def has_won(bet: Bet) -> bool:` , `def store_bets(bets: list[Bet]) -> None:` y `def load_bets() -> list[Bet]:` no son thread-safe. Esto quiere decir que debo de encargarme desde el lado del servidor de asegurarme que dos hilos no quieran utilizar estas funciones porque pueden quedar en un estado corrompido/inválido.
+
+## Comentarios generales sobre el TP
+
+### Modificaciones a lo largo de las ramas
+
+1. Me di cuenta durante el desarrollo del ej 7 que solo habia puesto el signal en el server para el SIGTERM y no el SIGINT, asi que fui y lo agregué en las distintas ramas.
+2. Tanto el protocolo del servidor como el del cliente sufrieron cambios a lo largo del TP. Cuando hice el primer modelo durante el ejercicio 5, rápido me di cuenta que no escalaba muy bien. Asi que tuve que ir agregándole partes, como el `message_code` que se ve a partir de la rama 7.
+3. En la misma línea que el comentario anterior, los Send y Receive se modificaron para que fueran ágnosticos al tamaño que se le pasaran y directamente enviaran el largo de la data que se le pasaba. También aplica al serializador que me di cuenta que era innecesario tener un tipo de dato `bet_serializado` sino que era mas facil tener las funciones para serializar cada dato y enviarlos directamente.
+
+### Comandos
+
+- Se cuenta con el script de bash `./generar-compose.sh <nombre_Del_archivo_de_salida> <cant_clientes>` que se encarga de generar el docker-compose. Por ejemplo, para correr 5 clients tendremos: `./generar-compose.sh docker-compose-dev.yaml 5`
+
+- Para levantar, ejecutar y detener los dockers siguen siendo los mismos comandos dados por la cátedra: `make docker-compose-up`, `make docker-compose-logs`, `make docker-compose-down`
+
+- Si se quiere cortar la ejecución de alguno de los contenedores, se debe tener una consola aparte de la que esta corriendo el contenedor y corer: `docker kill --signal=SIGTERM <nombre_del_contenedor_a_detener>`. Por ejemplo, si quisieramos detener el server haríamos: `docker kill --signal=SIGTERM server`
+
+### Protocolo
+
+#### Cliente a Servidor
+
+Tenemos en general 3 tipos de mensajes, de acuerdo a lo que se va a enviar, todo de tipo uint8:
+
+| Código | Descripción                  |
+| ------ | ---------------------------- |
+| `1`    | Enviar una Bet               |
+| `2`    | Inicio de batch de bets      |
+| ~~`3`~~    | ~~Fin de lote de apuestas~~  (A partir de la rama 7 no se usa)     |
+| `4`    | Solicitar lista de ganadores |
+
+##### Envío de una bet
+
+Cada vez que se manda una Bet este tendrá el siguiente orden de envío:
+
+| Campo | Tipo | Descripción |
+|--------|------|-------------|
+| `Bet_message_code` | `uint8` | Código del mensaje de apuesta (`1`). |
+| `size_first_name` | `uint32` | Tamaño del nombre. |
+| `first_name` | `[]bytes` | Nombre del apostador. |
+| `size_last_name` | `uint32` | Tamaño del apellido. |
+| `last_name` | `[]bytes` | Apellido del apostador. |
+| `size_document` | `uint32` | Tamaño del documento. |
+| `document` | `[]bytes` | Documento de identidad. |
+| `size_birthdate` | `uint32` | Tamaño de la fecha de nacimiento. |
+| `birthdate` | `[]bytes` | Fecha de nacimiento en formato `YYYY-MM-DD`. |
+| `size_agency` | `uint32` | Tamaño del identificador de agencia. |
+| `agency` | `[]bytes` | Identificador de la agencia. |
+
+##### Envío de un batch de bets
+
+Cuando se envía un batch de bets, se envía el código `2` correspondiente a batch_message y luego se itera la lista de bets mandandolos como se menciona en el punto anterior, pero sin enviar el `Bet_message_code` pues el servidor ya sabe que se están enviando este tipo de datos.
+
+##### Solicitar ganadores
+
+En este caso se envía solamente el código `4` y el servidor deberá responder: Primero con la cantidad de ganadores (como uint32), y luego con los documentos de cada uno (se siguió la misma lógica que con los bets: primero se envia el len del documento como uint32 y luego una slice de Bytes con el documento en si)
+
+#### Servidor a Cliente
+
+##### Códigos de confirmación
+
+Tanto si se envío una bet sola o un batch de bets, se devolverá un uint8 con el resultado de todo el proceso: En caso de éxito se devolverá 0 y en caso de que ocurriese alguna falla se devolverá 1.
+
+##### Lista de Ganadores
+
+Cuando el cliente solicita la lista de ganadores, el servidor responde con:
+
+1. `uint32`: Número de ganadores.
+2. Para cada ganador:
+   - `uint32`: Documento de identidad del ganador.
+
+#### Ejemplo de Comunicación
+
+```plaintext
+1. Cliente → Servidor: Enviar inicio de lote (`START_OF_BATCH_MESSAGE_CODE`).
+2. Cliente → Servidor: Enviar tamaño del lote (`uint32`).
+3. Cliente → Servidor: Enviar apuestas (`BET_MESSAGE_CODE` + datos).
+5. Servidor → Cliente: Confirmación de recepción (`uint8`).
+6. Cliente → Servidor: Solicitar lista de ganadores (`GET_WINNERS_MESSAGE_CODE`).
+7. Servidor → Cliente: Enviar cantidad de ganadores (`uint32`).
+8. Servidor → Cliente: Enviar documentos de ganadores (`uint32` por cada ganador).
+```
