@@ -12,17 +12,6 @@ BET_FAILURE = 1
 BATCH_SUCCESS = 0
 BATCH_FAILURE = 1
 
-class BetsController:
-    def __init__(self):
-        self.bets_received = 0
-        self.bets_failed = 0
-
-    def add_bet_received(self):
-        self.bets_received += 1
-    
-    def add_bet_failed(self):
-        self.bets_failed += 1
-
 class Server:
     def __init__(self, port, listen_backlog):
         # Initialize server socket
@@ -30,8 +19,8 @@ class Server:
         self._server_socket.bind(('', port))
         self._server_socket.listen(listen_backlog)
         self._was_closed = False
-        self._bets_controller = BetsController()
         signal.signal(signal.SIGTERM, self.stop_server)
+        signal.signal(signal.SIGINT, self.stop_server)
 
     def run(self):
         """
