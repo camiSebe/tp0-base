@@ -12,6 +12,12 @@ class ProtocolServer:
     def __init__(self, client_socket: socket.socket):
         self._client_socket = client_socket
 
+    def _client_is_connected(self) -> bool:
+        """
+        Check if the client is connected
+        """
+        return self._client_socket is not None
+
     def receive_message_code(self) -> int:
         """
         Receives the message code from the client

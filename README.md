@@ -22,8 +22,51 @@ Se modificó el script de python que generaba los de docker-compose para que ext
 
 Cada cliente se encarga de:
     1) Leer su csv y cargarlo
-    2) Partirlo en batches de maximo tamaño el `batch: maxAmount` y enviarle un mensaje al server con dicho tamaño
+    2) Partirlo en batches de maximo tamaño el `batch: maxAmount` y enviarle un mensaje al server con dicho tamaño (anteponiendo el codigo de envio de un batch (2))
     3) Enviar ese batch (aca adentro se repite el protocolo del ej 5)
     4) Esperar la confirmación del server de que el batch se guardó correctamente
+    5) Al terminar con todos los batches, se envia un mensaje de fin de envío de batches (3)
 
-El server por su parte, recibe primero el size del batch, luego todos los bets de dentro del batch, y repite este proceso hasta que el cliente deja de enviar batches.
+El server por su parte, recibe primero el message code para saber si se está enviando un bet particular (1), un batch de bets(2) o el fin de batches (3).
+
+- En caso de ser un bet se espera el orden mencionado en el ej 5.
+- En caso de ser un batch, se esperaran todos los bets de ese batch.
+- En caso de ser el mensaje de fin de batch se cerrará la comunicación.
+
+#### MaxBatchAmount
+
+El ejercicio pide que pongamos un max batch amount que no superare los 8 kB. Para estimar este valor lo que hice fue, usar para estimar el dato de ese ejercicio (NOMBRE="Santiago Lionel" APELLIDO="Lorca" DOCUMENTO="30904465" NACIMIENTO="1999-03-17" NUMERO="7574" AGENCIA="0"):
+
+Cálculo del tamaño de una apuesta:
+
+- Cada apuesta contiene los siguientes datos:
+  - Bet_message_code (omitido en batch) → 0 bytes
+  - size_first_name → 4 bytes
+  - first_name → longitud variable
+  - size_last_name → 4 bytes
+  - last_name → longitud variable
+  - size_document → 4 bytes
+  - document → longitud variable
+  - size_birthdate → 4 bytes
+  - birthdate (YYYY-MM-DD, siempre 10 bytes)
+  - size_agency → 4 bytes
+  - agency → longitud variable
+
+Entonces, los campos de tamaño fijo suman: 4 + 4 + 4 + 4 + 10 + 4 = 30 bytes
+
+Asumiendo como valores promedio para los campos variables:
+
+- Nombre: Santiago Lionel → 16 bytes
+- Apellido: Lorca → 5 bytes
+- Documento: 30904465 → 8 bytes
+- Agencia: 1 → 1 bytes
+
+Entones, los campos de tamaño variable suman: 16 + 5 + 8 + 1 = 30
+
+Entonces, en total, una apuesta ocuparía: 30 + 30 = 60 bytes
+
+Si configuramos batchMaxAmount = 100 apuestas por batch: 60 bytes * 100 = 6.0 kB < 8 kB
+
+Ahora, Si batchMaxAmount = 150: 60 bytes * 150 = 9.0 kB > Supera los 8 kB
+
+Asi que podemos tomar un valor alrededor de 100 y no habría problema, en principio. Hay que recordar que como tenemos datos variables, si llegaramos a tener un batch con nombre y apellidos muy largos, podríamos pasarnos. Por lo tanto, yo elegi un batch de 50 para tener bastante margen de error.

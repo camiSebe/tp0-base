@@ -12,6 +12,10 @@ BET_FAILURE = 1
 BATCH_SUCCESS = 0
 BATCH_FAILURE = 1
 
+NEW_BET_MESSAGE = 1
+NEW_BATCH_MESSAGE = 2
+END_OF_BATCHES = 3
+
 class Server:
     def __init__(self, port, listen_backlog):
         # Initialize server socket
@@ -50,7 +54,7 @@ class Server:
         self._log_debug('accept_connections', 'success', addr[0])
         return c
 
-    def __handle_client_connection(self, client_sock):
+    def __handle_client_connection(self, client_sock: socket.socket):
         """
         Receives a Bet from a specific client socket, stores it, sends a confirmation message back 
         and closes the socket
@@ -59,13 +63,36 @@ class Server:
         client socket will also be closed
         """
         try:
-            self.process_batch_of_bets(client_sock)
+            protocol_server = ProtocolServer(client_sock)
+
+            while protocol_server._client_is_connected():
+                message_code = protocol_server.receive_message_code()
+                # logging.info(f"action receive_message_code | result: success | message_code: {message_code}")
+
+                if message_code == NEW_BET_MESSAGE:
+                    self.process_bet(protocol_server)
+
+                elif message_code == NEW_BATCH_MESSAGE:
+                    self.process_batch_of_bets(protocol_server)
+
+                elif message_code == END_OF_BATCHES:
+                    self._log_info('receive_message_code', 'success', msg='Client finished sending batch of bets')
+                    break
+
+                else:
+                    self._log_error('receive_message_code', 'fail', error='Message code not recognized')
+
         except OSError as e:
             self._log_error('receive_message', 'fail', error=e)
+
+        except Exception as e:
+            self._log_error('receive_message', 'fail', error=e)
+
         finally:
             addr = client_sock.getpeername()
             self._log_debug('close_connection', 'success', addr[0])
-            client_sock.close()
+            if not client_sock._closed:
+                client_sock.close()
 
     def stop_server(self, signum, frame):
         """
@@ -77,19 +104,18 @@ class Server:
         self._server_socket.close()
         self._was_closed = True
 
-    def process_batch_of_bets(self, client_sock):
-        batch_size = ProtocolServer(client_sock).receive_batch_size()
+    def process_batch_of_bets(self, protocol_server: ProtocolServer):
+        batch_size = protocol_server.receive_batch_size()
         if batch_size==None:
             self._log_error('receive_batch_size', 'fail', error='Batch size did not arrive correctly')
-            ProtocolServer(client_sock).send_confirmation(BATCH_FAILURE)
+            protocol_server.send_confirmation(BATCH_FAILURE)
         else:
-            addr = client_sock.getpeername()
-            self._log_debug('receive_batch_size', 'success', addr[0], msg=f"batch_size: {batch_size}")
+            self._log_debug('receive_batch_size', 'success', msg=f"batch_size: {batch_size}")
             bets = []
             bets_failed = 0
             bets_succeded = 0
             for _ in range(batch_size):
-                new_bet = self.process_bet(client_sock)
+                new_bet = self.process_bet(protocol_server)
                 if new_bet==None:
                     bets_failed += 1
                 else:
@@ -98,21 +124,20 @@ class Server:
             store_bets(bets)
             if bets_failed > 0:
                 logging.info(f"action: apuesta_recibida | result: fail | cantidad: {bets_failed}")
-                ProtocolServer(client_sock).send_confirmation(BATCH_FAILURE)
+                protocol_server.send_confirmation(BATCH_FAILURE)
             else:
                 logging.info(f"action: apuesta_recibida | result: success | cantidad: {bets_succeded}")
-                ProtocolServer(client_sock).send_confirmation(BATCH_SUCCESS)
+                protocol_server.send_confirmation(BATCH_SUCCESS)
 
         # logging.info(f"action: apuesta_recibida | result: success | cantidad: {bets_succeded}")
 
-    def process_bet(self, client_sock) -> Bet:
-        bet = ProtocolServer(client_sock).receive_bet()
+    def process_bet(self, protocol_server: ProtocolServer) -> Bet:
+        bet = protocol_server.receive_bet()
         if bet==None: 
             self._log_error('receive_bet', 'fail', error='Bet did not arrive correctly')
             return None
         else:
-            addr = client_sock.getpeername()
-            self._log_debug('receive_bet', 'success', addr[0], msg=bet.log_message())
+            self._log_debug('receive_bet', 'success', msg=bet.log_message())
             return bet
 
     ### Logging helper functions
