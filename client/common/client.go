@@ -57,7 +57,10 @@ func (c *Client) StartClientLoop() {
 
 	protocol := NewProtocolClient(c.conn)
 
-	ProcessFileOfBets(protocol, c.config.ID, fmt.Sprintf(".data/agency-%s.csv", c.config.ID), c.config.BatchMaxAmount)
+	err := ProcessFileOfBets(protocol, c.config.ID, fmt.Sprintf(".data/agency-%s.csv", c.config.ID), c.config.BatchMaxAmount)
+	if err != nil {
+		log.Criticalf("action: process_file_of_bets | result: fail | error: %v", err)
+	}
 
 	GetWinners(protocol, c.config.ID)
 
